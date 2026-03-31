@@ -526,7 +526,22 @@ function chargeView(){
       if(!d){flash('Pick a date','amber');return;}
       var p2=getPt(pt.id);
       if(!p2.charges)p2.charges={};
-      if(!p2.charges[d])p2.charges[d]={cpt:[],notes:''};
+      if(!p2.charges[d]){
+        // pre-fill CPT codes from the most recent previous DOS
+        var prevKeys=Object.keys(p2.charges).sort(function(a,b){return b.localeCompare(a);});
+        var prevCPT=[];
+        if(prevKeys.length){
+          var prevDC=p2.charges[prevKeys[0]];
+          if(prevDC&&prevDC.cpt&&prevDC.cpt.length){
+            // deep copy so modifying new DOS doesn't affect old one
+            prevCPT=JSON.parse(JSON.stringify(prevDC.cpt));
+          }
+        }
+        p2.charges[d]={cpt:prevCPT,notes:'',_carried:prevCPT.length>0};
+        if(prevCPT.length){
+          flash('CPT codes carried over from '+fmtD(prevKeys[0])+'  — change if needed','blue');
+        }
+      }
       save();EDOS=d;render();
     }},['+ Add date']),
   ]));
@@ -542,6 +557,7 @@ function chargeView(){
         h('div',{cls:'dos-date'},[fmtD(d)]),
         h('div',{cls:'dos-summary'},[
           hasCodes?dc.cpt.map(function(c){return c.code+(c.mod?'-'+c.mod:'');}).join(', '):'No CPT codes yet',
+          dc._carried?' ↩ carried over':'',
         ]),
       ]),
       h('div',{style:{display:'flex',alignItems:'center',gap:'6px'}},[
@@ -672,6 +688,13 @@ function dosEditor(pt,d,dc){
   // CPT codes — dropdown
   f.appendChild(h('div',{cls:'sec',style:{marginTop:'0'}},['CPT codes for '+fmtD(d)]));
 
+  // show notice if codes were carried over
+  if(dc.cpt&&dc.cpt.length&&dc._carried){
+    f.appendChild(h('div',{style:{background:'var(--blue2)',border:'1px solid var(--blue3)',borderRadius:'var(--rs)',padding:'8px 12px',marginBottom:'10px',fontSize:'12px',color:'var(--blue)'}},[
+      '↩ CPT codes carried over from previous date — select a different code below to change, or save as-is.',
+    ]));
+  }
+
   // Build grouped select
   var selEl=h('select',{cls:'cpt-select'},[]);
   var defOpt=h('option',{value:''},[' — Select a CPT code — ']);
@@ -734,7 +757,10 @@ function dosEditor(pt,d,dc){
   nta.value=dc.notes||'';
   nta.addEventListener('input',function(){dc.notes=nta.value;saveDOS(pt.id,d,dc);});
   f.appendChild(nta);
-  f.appendChild(h('button',{cls:'btn green block','@click':function(){flash('Charges saved for '+fmtD(d));}},[' ✓ Charges saved for '+fmtD(d)]));
+  f.appendChild(h('button',{cls:'btn green block','@click':function(){
+    dc._carried=false; // clear the carried-over indicator once user saves
+    flash('Charges saved for '+fmtD(d));
+  }},[' ✓ Charges saved for '+fmtD(d)]));
 
   return h('div',{},[f]);
 }
