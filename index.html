@@ -860,25 +860,35 @@ function mkModal(){
         )]),
     ]));
     // DOB as 3 separate number fields — much faster on iPhone than scroll wheel
-    var mmIn=h('input',{cls:'inp',type:'number',placeholder:'MM',min:'1',max:'12',
+    var mmIn=h('input',{cls:'inp',type:'text',inputmode:'numeric',placeholder:'MM',
+      maxlength:'2',pattern:'[0-9]*',
       style:{textAlign:'center',width:'100%'},
       '@input':function(e){
-        NPT._mm=e.target.value;
-        if(e.target.value.length>=2){ddIn.focus();}
+        var v=e.target.value.replace(/\D/g,'').slice(0,2);
+        e.target.value=v;
+        NPT._mm=v;
+        if(v.length>=2){ddIn.focus();}
         trySetDOB();
       }});
-    var ddIn=h('input',{cls:'inp',type:'number',placeholder:'DD',min:'1',max:'31',
+    var ddIn=h('input',{cls:'inp',type:'text',inputmode:'numeric',placeholder:'DD',
+      maxlength:'2',pattern:'[0-9]*',
       style:{textAlign:'center',width:'100%'},
       '@input':function(e){
-        NPT._dd=e.target.value;
-        if(e.target.value.length>=2){yyIn.focus();}
+        var v=e.target.value.replace(/\D/g,'').slice(0,2);
+        e.target.value=v;
+        NPT._dd=v;
+        if(v.length>=2){yyIn.focus();}
         trySetDOB();
       }});
-    var yyIn=h('input',{cls:'inp',type:'number',placeholder:'YYYY',min:'1900',max:'2099',
+    var yyIn=h('input',{cls:'inp',type:'text',inputmode:'numeric',placeholder:'YYYY',
+      maxlength:'4',pattern:'[0-9]*',
       style:{textAlign:'center',width:'100%'},
       '@input':function(e){
-        NPT._yy=e.target.value;
-        trySetDOB();
+        // strip non-digits
+        var v=e.target.value.replace(/\D/g,'').slice(0,4);
+        e.target.value=v;
+        NPT._yy=v;
+        if(v.length===4) trySetDOB();
       }});
     function trySetDOB(){
       var mm=NPT._mm,dd=NPT._dd,yy=NPT._yy;
