@@ -316,6 +316,7 @@ Object.keys(ICD_CATS).forEach(function(cat){ICD_CATS[cat].forEach(function(p){IC
 // ── STATE ────────────────────────────────────────────────────────────────────
 var V='census';
 var MODAL=null;
+var MODAL_SYNC_METHOD='zoho'; // which sync method tab is shown
 var TOAST=null,TOAST_T=null;
 var PID=null;
 var EDOS=null;
@@ -750,7 +751,7 @@ function summaryView(){
     h('div',{cls:'stat'},[h('div',{cls:'stat-n'},[String(totalCPT)]),h('div',{cls:'stat-l'},['CPT codes'])]),
   ]));
   f.appendChild(h('div',{cls:'btn-row',style:{marginBottom:'16px'}},[
-    h('button',{cls:'btn blue',style:{flex:'1'},'@click':function(){MODAL='email';render();}},['✉ Email biller']),
+    h('button',{cls:'btn blue',style:{flex:'1'},'@click':function(){MODAL='email';render();}},['📤 Send charges']),
     h('button',{cls:'btn',style:{flex:'1'},'@click':exportCSV},['⬇ CSV']),
     h('button',{cls:'btn','@click':function(){MODAL='export';render();}},['💾 Backup']),
   ]));
@@ -774,6 +775,7 @@ function summaryView(){
       h('div',{style:{fontWeight:'700',fontSize:'14px'}},[fmtD(d)]),
       h('div',{style:{display:'flex',alignItems:'center',gap:'8px'}},[
         h('span',{style:{fontSize:'12px',color:'var(--tx2)'}},[plist.length+' patient'+(plist.length!==1?'s':'')]),
+        h('button',{cls:'btn xs',style:{background:'var(--blue2)',color:'var(--blue)',border:'1px solid var(--blue3)'},'@click':function(){shareDayCharges(d);}},['📤 Share']),
         h('button',{cls:'btn xs',style:{background:'var(--green2)',color:'var(--green)',border:'1px solid var(--green3)'},'@click':function(){exportDayCSV(d);}},['⬇ CSV']),
       ]),
     ])];
@@ -803,6 +805,32 @@ function summaryView(){
 }
 
 // ── MODALS ───────────────────────────────────────────────────────────────────
+// ── SYNC MODAL HELPERS ────────────────────────────────────────────────────────
+function mkMethodBtn(method, label, current){
+  var active = current===method;
+  var btn = h('button',{
+    cls:'btn sm'+(active?' blue':''),
+    style:{fontWeight:active?'700':'500'},
+    '@click':function(){MODAL_SYNC_METHOD=method;render();}
+  },[label]);
+  return btn;
+}
+
+function syncBox(title, steps, tip){
+  var stepEls = steps.map(function(s){
+    return h('div',{style:{display:'flex',gap:'10px',padding:'5px 0',borderBottom:'1px solid var(--bd)'}},[
+      s[0]?h('span',{style:{fontWeight:'700',color:'var(--blue)',flexShrink:'0',minWidth:'16px',fontSize:'12px'}},[s[0]+'.']):
+           h('span',{style:{flexShrink:'0',minWidth:'16px'}},['']),
+      h('span',{style:{fontSize:'13px',color:'var(--tx2)',lineHeight:'1.5'}},[s[1]]),
+    ]);
+  });
+  return h('div',{style:{background:'var(--bg2)',border:'1px solid var(--bd)',borderRadius:'var(--rs)',padding:'12px',marginBottom:'14px'}},[
+    h('div',{style:{fontWeight:'700',fontSize:'13px',color:'var(--tx)',marginBottom:'10px'}},[title]),
+    h('div',{style:{borderTop:'1px solid var(--bd)'}},stepEls),
+    tip?h('div',{style:{marginTop:'9px',fontSize:'12px',color:'var(--tx2)',fontStyle:'italic'}},[tip]):null,
+  ]);
+}
+
 function mkModal(){
   var ov=h('div',{cls:'overlay','@click':function(e){if(e.target===ov){MODAL=null;render();}}});
   var sh=h('div',{cls:'sheet'},[h('div',{cls:'drag'})]);
@@ -840,22 +868,19 @@ function mkModal(){
   }
 
   if(MODAL==='email'){
-    sh.appendChild(h('div',{cls:'modal-title'},['Email to biller']));
-    var einp=h('input',{cls:'inp',type:'email',placeholder:'biller@practice.com',value:DB.cfg.email||'','@input':function(e){DB.cfg.email=e.target.value;}});
-    sh.appendChild(h('div',{cls:'field'},[h('label',{},['Biller email']),einp]));
+    sh.appendChild(h('div',{cls:'modal-title'},['Send charges to biller']));
 
-    // find new admission / consult patients with facesheets
+    // facesheet section for new/consult patients
     var fsPatients=DB.patients.filter(function(pt){
       return pt.facesheet&&(pt.type==='new'||pt.type==='consult');
     });
-    // track which ones are checked — stored on the sheet element
     var fsChecked={};
     fsPatients.forEach(function(pt){fsChecked[pt.id]=true;});
 
     if(fsPatients.length){
-      sh.appendChild(h('div',{style:{background:'var(--purple2)',border:'1px solid var(--purple3)',borderRadius:'var(--rs)',padding:'12px',marginBottom:'12px'}},[
-        h('div',{style:{fontSize:'13px',fontWeight:'700',color:'var(--purple)',marginBottom:'8px'}},['📎 Facesheets to send with this email']),
-        h('div',{style:{fontSize:'12px',color:'var(--purple)',marginBottom:'10px',lineHeight:'1.5'}},['These new/consult patients have facesheets. Check the ones to download — they\'ll save to your device so you can attach them before sending.']),
+      sh.appendChild(h('div',{style:{background:'var(--purple2)',border:'1px solid var(--purple3)',borderRadius:'var(--rs)',padding:'12px',marginBottom:'14px'}},[
+        h('div',{style:{fontSize:'13px',fontWeight:'700',color:'var(--purple)',marginBottom:'6px'}},['📎 New/consult patient facesheets']),
+        h('div',{style:{fontSize:'12px',color:'var(--purple)',marginBottom:'10px',lineHeight:'1.5'}},['Check the patients whose facesheets you want downloaded to attach to your Zoho Mail email.']),
         h('div',{style:{display:'flex',flexDirection:'column',gap:'7px'}},
           fsPatients.map(function(pt){
             var tm=TM[pt.type]||TM.followup;
@@ -870,18 +895,45 @@ function mkModal(){
           })
         ),
       ]));
-    } else {
-      sh.appendChild(h('p',{style:{fontSize:'13px',color:'var(--tx2)',marginBottom:'14px'}},['Sends all charges for '+DB.patients.length+' patient'+(DB.patients.length!==1?'s':'')+'.']));
     }
 
-    sh.appendChild(h('div',{cls:'btn-row',style:{marginTop:'4px'}},[
-      h('button',{cls:'btn blue',style:{flex:'1',padding:'12px'},'@click':function(){
+    // how-to tip
+    sh.appendChild(h('div',{style:{background:'var(--blue2)',border:'1px solid var(--blue3)',borderRadius:'var(--rs)',padding:'11px 13px',marginBottom:'14px',fontSize:'13px',color:'var(--blue)',lineHeight:'1.6'}},[
+      h('b',{},['How to send via Zoho Mail:']),
+      h('ol',{style:{marginLeft:'16px',marginTop:'4px'}},[
+        h('li',{},[fsPatients.length?'Download facesheets below (if needed)':'Tap "📤 Share" below']),
+        h('li',{},['Tap "📤 Share" — your iPhone share sheet opens']),
+        h('li',{},['Choose "Zoho Mail" from the share sheet']),
+        h('li',{},['The charges are pre-filled — attach facesheet(s) if needed, then send']),
+      ]),
+      h('p',{style:{marginTop:'8px',fontSize:'12px',opacity:'.8'}},['If Zoho Mail isn\'t in the share sheet, use "📋 Copy" and paste into a new Zoho Mail email.']),
+    ]));
+
+    sh.appendChild(h('div',{style:{display:'flex',flexDirection:'column',gap:'9px'}},[ 
+      // Download facesheets button (if any)
+      fsPatients.length?h('button',{cls:'btn purple block','@click':function(){
+        var ids=fsPatients.filter(function(pt){return fsChecked[pt.id];}).map(function(pt){return pt.id;});
+        if(!ids.length){flash('No facesheets selected','amber');return;}
+        ids.forEach(function(id,i){setTimeout(function(){var pt=getPt(id);if(pt)downloadFacesheet(pt);},i*700);});
+        flash('Downloading '+ids.length+' facesheet'+(ids.length!==1?'s':'')+'…','blue');
+      }},['📎 Download facesheet'+(fsPatients.length>1?'s ('+fsPatients.length+')':'')]):null,
+
+      // Share via share sheet (Web Share API)
+      h('button',{cls:'btn blue block','@click':function(){
         var ids=fsPatients.filter(function(pt){return fsChecked[pt.id];}).map(function(pt){return pt.id;});
         MODAL=null;render();
-        doEmail(ids);
-      }},[fsPatients.length?'📎 Download facesheets + open email':'Open email app']),
-      h('button',{cls:'btn','@click':function(){MODAL=null;render();}},['Cancel']),
-    ]));
+        shareCharges(ids);
+      }},['📤 Share  →  open in Zoho Mail']),
+
+      // Copy to clipboard fallback
+      h('button',{cls:'btn block','@click':function(){
+        var ids=fsPatients.filter(function(pt){return fsChecked[pt.id];}).map(function(pt){return pt.id;});
+        MODAL=null;render();
+        copyCharges(ids);
+      }},['📋 Copy charges to clipboard']),
+
+      h('button',{cls:'btn sm','style':'margin-top:4px','@click':function(){MODAL=null;render();}},['Cancel']),
+    ].filter(Boolean)));
   }
 
   if(MODAL==='settings'){
@@ -894,21 +946,123 @@ function mkModal(){
     sh.appendChild(h('div',{cls:'divider'}));
     sh.appendChild(h('div',{style:{fontSize:'12px',color:'var(--tx2)',marginBottom:'10px'}},[LS?'✅ Data persists on this device. ':'⚠ Session only — export backup below. ',DB.patients.length+' patient'+(DB.patients.length!==1?'s':'')+' stored.']));
     sh.appendChild(h('div',{cls:'btn-row'},[
-      h('button',{cls:'btn sm','@click':function(){MODAL='export';render();}},['💾 Export backup']),
+      h('button',{cls:'btn sm','@click':function(){MODAL='export';render();}},['🔄 Sync / backup']),
       h('button',{cls:'btn sm','@click':importData},['📂 Import backup']),
       LS?h('button',{cls:'btn sm red','@click':function(){if(confirm('Delete ALL data permanently?')){sDel(SK);DB={patients:[],cfg:{practice:'Nephrology Associates',email:''}};MODAL=null;flash('Cleared','amber');render();}}},['🗑 Clear all']):null,
     ]));
   }
 
   if(MODAL==='export'){
-    sh.appendChild(h('div',{cls:'modal-title'},['Backup & Export']));
-    sh.appendChild(h('p',{style:{fontSize:'14px',color:'var(--tx2)',marginBottom:'16px',lineHeight:'1.6'}},['Export a JSON backup of all patients and charges. Import it on any device to restore your data.']));
-    sh.appendChild(h('button',{cls:'btn blue block',style:{marginBottom:'10px'},'@click':exportJSON},['⬇ Download backup (.json)']));
-    sh.appendChild(h('p',{style:{fontSize:'12px',color:'var(--tx3)',textAlign:'center',marginBottom:'14px'}},['iPhone: tap ⬇ → tap file → Share → Save to Files']));
-    sh.appendChild(h('div',{cls:'divider'}));
-    sh.appendChild(h('p',{style:{fontSize:'13px',color:'var(--tx2)',marginBottom:'10px'}},['Restore from backup:']));
-    sh.appendChild(h('button',{cls:'btn block','@click':importData},['📂 Import backup file']));
-    sh.appendChild(h('div',{style:{marginTop:'12px'}},[h('button',{cls:'btn sm','@click':function(){MODAL=null;render();}},['Close'])]));
+    sh.appendChild(h('div',{cls:'modal-title'},['Sync: iPhone ↔ Windows  (Zoho ecosystem)']));
+
+    var isIphone=/iPhone|iPad|iPod/.test(navigator.userAgent);
+    var isWindows=/Win/.test(navigator.platform||navigator.userAgent);
+
+    // ── METHOD TABS ──
+    // We offer 3 methods: Zoho Mail (best, they have it), Google Drive, OneDrive
+    var METHOD=MODAL_SYNC_METHOD||'zoho';
+
+    var methodBtns=h('div',{style:{display:'flex',gap:'6px',marginBottom:'14px',flexWrap:'wrap'}},[
+      mkMethodBtn('zoho',  '✉ Zoho Mail', METHOD),
+      mkMethodBtn('workdrive','📁 WorkDrive', METHOD),
+      mkMethodBtn('onedrive','☁ OneDrive', METHOD),
+    ]);
+    sh.appendChild(methodBtns);
+
+    // ── ZOHO MAIL method ──
+    if(METHOD==='zoho'){
+      sh.appendChild(syncBox('✉ Via Zoho Mail — easiest, no extra apps',
+        isIphone
+          ? [['1','Tap "📤 Share backup" below'],
+             ['2','Tap "Mail" → Zoho Mail opens'],
+             ['3','Send the email to yourself'],
+             ['4','On Windows: open Zoho Mail in browser'],
+             ['5','Download the attachment (.json file)'],
+             ['6','Drag that file onto the app window — done']]
+          : [['1','On iPhone: export backup and email to yourself in Zoho'],
+             ['2','Open Zoho Mail here in your browser'],
+             ['3','Download the .json attachment'],
+             ['4','Drag the file onto this app window — imports instantly'],
+             ['','Or click "📂 Import backup file" below and select it']],
+        'You already use Zoho Mail — no new apps or accounts needed.'
+      ));
+    }
+
+    // ── GOOGLE DRIVE method ──
+    if(METHOD==='workdrive'){
+      sh.appendChild(syncBox('📁 Via Zoho WorkDrive — all Zoho, no extra accounts',
+        isIphone
+          ? [['1','Install Zoho WorkDrive app on iPhone (free, from Zoho)'],
+             ['2','Tap "📤 Share backup" below'],
+             ['3','Tap "Save to Files" → choose WorkDrive folder'],
+             ['4','On Windows: open workdrive.zoho.com in browser'],
+             ['5','Find the nephro_backup file → download it'],
+             ['6','Drag it onto this app window — done']]
+          : [['1','On iPhone: share backup → save to WorkDrive via Files app'],
+             ['2','Open workdrive.zoho.com in this browser'],
+             ['3','Find the nephro_backup file → download it'],
+             ['4','Drag it onto this app window — imports instantly'],
+             ['','Or click "📂 Import backup file" below']],
+        'Zoho WorkDrive uses the same Zoho account you already have — no new sign-ups needed.'
+      ));
+    }
+
+    // ── ONEDRIVE method ──
+    if(METHOD==='onedrive'){
+      sh.appendChild(syncBox('☁ Via OneDrive — already on Windows',
+        isIphone
+          ? [['1','Install OneDrive app on iPhone (free, from Microsoft)'],
+             ['2','Tap "📤 Share backup" → "Save to Files" → OneDrive'],
+             ['3','On Windows: open File Explorer → OneDrive folder'],
+             ['4','Drag the .json file onto this app window — done']]
+          : [['1','On iPhone: share backup → save to OneDrive via Files app'],
+             ['2','On Windows: open File Explorer → OneDrive folder'],
+             ['3','Find the nephro_backup file'],
+             ['4','Drag it onto this app window — imports instantly'],
+             ['','Or click "📂 Import" below']],
+        'OneDrive is built into Windows 11 — no download needed on PC.'
+      ));
+    }
+
+    // ── ACTION BUTTONS ──
+    sh.appendChild(h('div',{style:{display:'flex',gap:'8px',marginBottom:'12px',flexWrap:'wrap'}},[
+      isIphone
+        ? h('button',{cls:'btn blue',style:{flex:'1'},'@click':function(){shareBackup();}},['📤 Share backup'])
+        : null,
+      h('button',{cls:'btn '+(isIphone?'':'blue'),style:{flex:'1'},'@click':exportJSON},['⬇ Download backup']),
+    ].filter(Boolean)));
+
+    sh.appendChild(h('button',{cls:'btn block',style:{marginBottom:'12px'},'@click':importData},['📂 Import backup file']));
+
+    // ── DRAG DROP TIP (desktop only) ──
+    if(!isIphone){
+      sh.appendChild(h('div',{style:{background:'var(--green2)',border:'1px solid var(--green3)',borderRadius:'var(--rs)',padding:'10px 13px',marginBottom:'14px',fontSize:'12px',color:'var(--green)',lineHeight:'1.6'}},[
+        '💡 Fastest on Windows: just drag the .json file from File Explorer or your Downloads folder and drop it anywhere on the app — no need to click Import.',
+      ]));
+    }
+
+    // ── DAILY TIP ──
+    sh.appendChild(h('div',{style:{background:'var(--amber2)',border:'1px solid var(--amber3)',borderRadius:'var(--rs)',padding:'10px 13px',marginBottom:'14px',fontSize:'12px',color:'var(--amber)',lineHeight:'1.6'}},[
+      h('b',{},['💡 Recommended daily routine: ']),
+      'Finish rounds on iPhone → Share backup to yourself in Zoho Mail or WorkDrive → on Windows, download → drag onto app. Under 60 seconds.',
+    ]));
+
+    // ── DATA INFO ──
+    var totalDOS=Object.keys(DB.patients.reduce(function(a,p){Object.keys(p.charges||{}).forEach(function(d){a[d]=1;});return a;},{})).length;
+    sh.appendChild(h('div',{style:{fontSize:'12px',color:'var(--tx2)',marginBottom:'12px'}},[
+      LS?'✅ Data saved on this device. ':'⚠ Session only — export to preserve data. ',
+      DB.patients.length+' patient'+(DB.patients.length!==1?'s':'')+' · '+totalDOS+' date'+(totalDOS!==1?'s':'')+' of service.',
+    ]));
+
+    sh.appendChild(h('div',{style:{display:'flex',gap:'8px'}},[
+      LS?h('button',{cls:'btn sm red','@click':function(){
+        if(confirm('Delete ALL data on this device? Cannot be undone.')){
+          sDel(SK);DB={patients:[],cfg:{practice:'Nephrology Associates',email:''}};
+          MODAL=null;MODAL_SYNC_METHOD=null;flash('Data cleared','amber');render();
+        }
+      }},['🗑 Clear this device']):null,
+      h('button',{cls:'btn sm','@click':function(){MODAL=null;MODAL_SYNC_METHOD=null;render();}},['Close']),
+    ].filter(Boolean)));
   }
 
   ov.appendChild(sh);return ov;
@@ -1001,36 +1155,181 @@ function downloadFacesheet(pt){
 }
 
 
-function doEmail(fsIds){
-  // download selected facesheets with staggered delays so browser can handle them
+// ── CHARGE TEXT BUILDER ──────────────────────────────────────────────────────
+function buildChargeText(fsIds){
+  var today2=today();
+  var lines=['NEPHROLOGY CHARGE CAPTURE'];
+  lines.push('Practice: '+DB.cfg.practice);
+  lines.push('Sent: '+fmtD(today2));
+  lines.push('');
+
+  // Facesheet note
+  if(fsIds&&fsIds.length){
+    var fsNames=fsIds.map(function(id){var pt=getPt(id);return pt?pt.name+(pt.room?' (Rm '+pt.room+')':''):'';}).filter(Boolean);
+    if(fsNames.length){
+      lines.push('⚠ PLEASE ATTACH FACESHEETS for:');
+      fsNames.forEach(function(n){lines.push('  • '+n);});
+      lines.push('');
+    }
+  }
+
+  // Group by date of service for clean layout
+  var allDOS={};
+  DB.patients.forEach(function(pt){
+    Object.keys(pt.charges||{}).sort().forEach(function(d){
+      if(!allDOS[d])allDOS[d]=[];
+      allDOS[d].push(pt);
+    });
+  });
+
+  var dosKeys=Object.keys(allDOS).sort(function(a,b){return b.localeCompare(a);});
+
+  dosKeys.forEach(function(d){
+    lines.push('═══════════════════════════════');
+    lines.push('DATE OF SERVICE: '+fmtD(d));
+    lines.push('═══════════════════════════════');
+    allDOS[d].forEach(function(pt){
+      var dc=pt.charges[d];
+      var tm=TM[pt.type]||TM.followup;
+      lines.push('');
+      lines.push('Patient : '+pt.name+(pt.age?' | Age '+pt.age:'')+(pt.room?' | Rm '+pt.room:''));
+      lines.push('Type    : '+tm.label+' | '+(pt.status==='active'?'Active inpatient':'Discharged'));
+      if(pt.admitDate) lines.push('Admitted: '+fmtD(pt.admitDate));
+      // CPT codes
+      if(dc.cpt&&dc.cpt.length){
+        lines.push('CPT     : '+dc.cpt.map(function(c){return c.code+(c.mod?' ['+c.mod+']':'')+' — '+c.desc;}).join('\n          '));
+      } else {
+        lines.push('CPT     : (none)');
+      }
+      // ICD-10 — shared from patient
+      if((pt.icd||[]).length){
+        lines.push('ICD-10  : '+(pt.icd||[]).map(function(c){return c.code+' — '+c.desc;}).join('\n          '));
+      } else {
+        lines.push('ICD-10  : (none)');
+      }
+      if(dc.notes) lines.push('Notes   : '+dc.notes);
+      lines.push('───────────────────────────────');
+    });
+    lines.push('');
+  });
+
+  if(!dosKeys.length){
+    lines.push('No charges logged yet.');
+  }
+
+  return lines.join('\n');
+}
+
+// ── SHARE via Web Share API (opens Zoho Mail on iPhone) ───────────────────
+function shareCharges(fsIds){
+  // Download facesheets first with stagger
   if(fsIds&&fsIds.length){
     fsIds.forEach(function(id,i){
       setTimeout(function(){var pt=getPt(id);if(pt)downloadFacesheet(pt);},i*700);
     });
   }
-  var fsNames=[];
-  var lines=[];
-  DB.patients.forEach(function(pt){
-    var dosKeys=Object.keys(pt.charges||{}).sort();if(!dosKeys.length)return;
-    var tm=TM[pt.type]||TM.followup;
-    var icdLine=(pt.icd||[]).length?'Diagnoses: '+(pt.icd||[]).map(function(c){return c.code+' '+c.desc;}).join(', '):'No diagnoses';
-    var ptHead=pt.name+(pt.age?' (Age '+pt.age+')':'')+(pt.room?'  Rm '+pt.room:'')+'  ['+tm.label+']  ['+(pt.status==='active'?'Active':'Discharged')+']';
-    if(fsIds&&fsIds.indexOf(pt.id)>=0)fsNames.push(pt.name+(pt.room?' (Rm '+pt.room+')':''));
-    dosKeys.forEach(function(d){
-      var dc=pt.charges[d];
-      var cpts=dc.cpt&&dc.cpt.length?dc.cpt.map(function(c){return c.code+(c.mod?'-'+c.mod:'')+' '+c.desc;}).join(', '):'No CPT';
-      lines.push(ptHead+'\nDOS: '+fmtD(d)+'\nCPT: '+cpts+'\n'+icdLine+(dc.notes?'\nNotes: '+dc.notes:''));
+
+  var text=buildChargeText(fsIds);
+  var title='Nephrology Charges — '+fmtD(today());
+
+  if(navigator.share){
+    // Web Share API — opens iOS share sheet, Zoho Mail appears if installed
+    navigator.share({title:title,text:text}).then(function(){
+      flash('Charges shared ✓');
+    }).catch(function(err){
+      if(err.name!=='AbortError'){
+        // User didn't cancel — fall back to clipboard
+        copyTextToClipboard(text);
+        flash('Share unavailable — copied to clipboard instead','blue');
+      }
     });
+  } else {
+    // Desktop or unsupported browser — fall back to clipboard
+    copyTextToClipboard(text);
+    flash('Copied to clipboard — paste into Zoho Mail','blue');
+  }
+}
+
+// ── COPY to clipboard ────────────────────────────────────────────────────────
+function copyCharges(fsIds){
+  if(fsIds&&fsIds.length){
+    fsIds.forEach(function(id,i){
+      setTimeout(function(){var pt=getPt(id);if(pt)downloadFacesheet(pt);},i*700);
+    });
+  }
+  var text=buildChargeText(fsIds);
+  copyTextToClipboard(text);
+}
+
+function copyTextToClipboard(text){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){
+      flash('✓ Copied! Open Zoho Mail → New email → paste (long-press in body)','green');
+    }).catch(function(){
+      fallbackCopy(text);
+    });
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text){
+  var ta=document.createElement('textarea');
+  ta.value=text;ta.style.cssText='position:fixed;top:0;left:0;opacity:0;';
+  document.body.appendChild(ta);ta.focus();ta.select();
+  try{
+    document.execCommand('copy');
+    flash('✓ Copied! Open Zoho Mail → New email → paste','green');
+  }catch(e){
+    flash('Could not copy automatically — please select and copy manually','amber');
+  }
+  document.body.removeChild(ta);
+}
+
+// Keep doEmail as thin wrapper for backward compat (per-date share buttons)
+function doEmail(fsIds){ shareCharges(fsIds||[]); }
+
+
+// Share charges for a single date of service
+function shareDayCharges(d){
+  var plist=[];
+  DB.patients.forEach(function(pt){if(pt.charges&&pt.charges[d])plist.push(pt);});
+  if(!plist.length){flash('No charges for '+fmtD(d),'amber');return;}
+
+  var lines=['NEPHROLOGY CHARGE CAPTURE'];
+  lines.push('Practice: '+DB.cfg.practice);
+  lines.push('Date of service: '+fmtD(d));
+  lines.push('═══════════════════════════════');
+  plist.forEach(function(pt){
+    var dc=pt.charges[d];
+    var tm=TM[pt.type]||TM.followup;
     lines.push('');
+    lines.push('Patient : '+pt.name+(pt.age?' | Age '+pt.age:'')+(pt.room?' | Rm '+pt.room:''));
+    lines.push('Type    : '+tm.label+' | '+(pt.status==='active'?'Active':'Discharged'));
+    if(dc.cpt&&dc.cpt.length){
+      lines.push('CPT     : '+dc.cpt.map(function(c){return c.code+(c.mod?' ['+c.mod+']':'')+' — '+c.desc;}).join('\n          '));
+    } else {
+      lines.push('CPT     : (none)');
+    }
+    if((pt.icd||[]).length){
+      lines.push('ICD-10  : '+(pt.icd||[]).map(function(c){return c.code+' — '+c.desc;}).join('\n          '));
+    }
+    if(dc.notes) lines.push('Notes   : '+dc.notes);
+    lines.push('───────────────────────────────');
   });
-  var fsNote=fsNames.length
-    ?'\n⚠ PLEASE ATTACH FACESHEETS for the following new/consult patients:\n'+fsNames.map(function(n){return '  • '+n;}).join('\n')+'\n(Facesheets are downloading to your device now — attach before sending)\n'
-    :'';
-  var body='NEPHROLOGY CHARGE CAPTURE\nPractice: '+DB.cfg.practice+fsNote+'\n\n'+lines.join('\n---\n');
-  // slight delay so downloads start before mailto fires
-  setTimeout(function(){
-    window.location.href='mailto:'+DB.cfg.email+'?subject='+encodeURIComponent('Nephrology Charges')+'&body='+encodeURIComponent(body);
-  },fsIds&&fsIds.length?900:0);
+
+  var text=lines.join('\n');
+  var title='Nephrology Charges — '+fmtD(d);
+
+  if(navigator.share){
+    navigator.share({title:title,text:text}).then(function(){
+      flash('Charges for '+fmtD(d)+' shared ✓');
+    }).catch(function(err){
+      if(err.name!=='AbortError'){copyTextToClipboard(text);}
+    });
+  } else {
+    copyTextToClipboard(text);
+  }
 }
 
 function exportDayCSV(d){
@@ -1080,26 +1379,105 @@ function exportCSV(){
 
 function exportJSON(){
   var exp=JSON.parse(JSON.stringify(DB));
-  exp.patients.forEach(function(p){p.facesheet=null;});
+  exp.patients.forEach(function(p){p.facesheet=null;});// strip images to keep file small
   dlText(JSON.stringify(exp,null,2),'nephro_backup_'+today()+'.json','application/json');
+}
+
+// Share the backup file via iOS share sheet (AirDrop, WorkDrive, Zoho Mail, etc.)
+function shareBackup(){
+  var exp=JSON.parse(JSON.stringify(DB));
+  exp.patients.forEach(function(p){p.facesheet=null;});
+  var json=JSON.stringify(exp,null,2);
+  var filename='nephro_backup_'+today()+'.json';
+
+  try{
+    // Create a File object and share it
+    var blob=new Blob([json],{type:'application/json'});
+    var file=new File([blob],filename,{type:'application/json'});
+    if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+      navigator.share({
+        title:'Nephro Backup — '+today(),
+        text:'Nephrology charge capture backup — import on other device',
+        files:[file]
+      }).then(function(){flash('Backup shared ✓');})
+        .catch(function(e){if(e.name!=='AbortError')exportJSON();});
+      return;
+    }
+  }catch(e){}
+  // Fallback: regular download
+  exportJSON();
+  flash('Saved to Downloads — upload to WorkDrive or OneDrive to sync','blue');
 }
 
 function importData(){
   var inp=document.createElement('input');inp.type='file';inp.accept='.json,application/json';
   inp.onchange=function(){
     if(!inp.files||!inp.files[0])return;
-    var reader=new FileReader();
-    reader.onload=function(e){
-      try{
-        var imp=JSON.parse(e.target.result);
-        if(!imp.patients||!imp.cfg)throw new Error('bad');
-        imp.patients.forEach(function(p){if(!DB.patients.find(function(x){return x.id===p.id;}))DB.patients.push(p);});
-        DB.cfg=imp.cfg;save();MODAL=null;flash('Data imported','blue');render();
-      }catch(ex){flash('Invalid backup file','amber');}
-    };
-    reader.readAsText(inp.files[0]);
+    processImportFile(inp.files[0]);
   };
   inp.click();
+}
+
+function processImportFile(file){
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var imp=JSON.parse(e.target.result);
+      if(!imp.patients||!imp.cfg)throw new Error('bad format');
+
+      var added=0,updated=0;
+      imp.patients.forEach(function(p){
+        var existing=DB.patients.find(function(x){return x.id===p.id;});
+        if(!existing){
+          // New patient — add but preserve any facesheet from current device
+          DB.patients.push(p);added++;
+        } else {
+          // Existing patient — merge charges (imported charges + local charges, keep all)
+          var mergedCharges=Object.assign({},existing.charges||{},p.charges||{});
+          // Merge ICD codes (combine, deduplicate by code)
+          var allICD=(existing.icd||[]).concat(p.icd||[]);
+          var seenICD={};
+          var mergedICD=allICD.filter(function(c){if(seenICD[c.code])return false;seenICD[c.code]=true;return true;});
+          // Update fields from imported version, but keep local facesheet if present
+          Object.assign(existing,p,{
+            charges:mergedCharges,
+            icd:mergedICD,
+            facesheet:existing.facesheet||p.facesheet||null
+          });
+          updated++;
+        }
+      });
+      // Update settings if imported has them
+      if(imp.cfg.practice)DB.cfg.practice=imp.cfg.practice;
+      if(imp.cfg.email)DB.cfg.email=imp.cfg.email;
+      save();MODAL=null;
+      flash('Imported: '+added+' new patient'+(added!==1?'s':'')+', '+updated+' updated','blue');
+      render();
+    }catch(ex){flash('Invalid backup file — check it is a .json export from this app','amber');}
+  };
+  reader.readAsText(file);
+}
+
+// Drag and drop import — works on desktop
+function setupDragDrop(){
+  document.addEventListener('dragover',function(e){
+    e.preventDefault();
+    document.getElementById('app').style.outline='3px dashed var(--blue)';
+  });
+  document.addEventListener('dragleave',function(e){
+    if(!e.relatedTarget)document.getElementById('app').style.outline='';
+  });
+  document.addEventListener('drop',function(e){
+    e.preventDefault();
+    document.getElementById('app').style.outline='';
+    var file=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];
+    if(!file)return;
+    if(file.name.endsWith('.json')||file.type==='application/json'){
+      processImportFile(file);
+    } else {
+      flash('Drop a .json backup file to import','amber');
+    }
+  });
 }
 
 function dlText(content,filename,mime){
@@ -1117,6 +1495,7 @@ function dlText(content,filename,mime){
 function flash(msg,t){clearTimeout(TOAST_T);TOAST={m:msg,t:t||'green'};render();TOAST_T=setTimeout(function(){TOAST=null;render();},3500);}
 
 render();
+setupDragDrop();
 </script>
 
 <script>
