@@ -757,6 +757,13 @@ function summaryView(){
   ]));
   if(!totalPts){f.appendChild(h('div',{cls:'empty'},[h('div',{cls:'empty-icon'},['📋']),h('div',{style:{fontWeight:'700',marginBottom:'8px'}},['No patients yet'])]));return h('div',{},[f]);}
 
+  // warn if active patients have no charges logged today
+  var ptsNoCharges=DB.patients.filter(function(p){return p.status==='active'&&!Object.keys(p.charges||{}).length;});
+  if(ptsNoCharges.length){
+    f.appendChild(h('div',{style:{background:'var(--amber2)',border:'1px solid var(--amber3)',borderRadius:'var(--rs)',padding:'10px 13px',marginBottom:'12px',fontSize:'13px',color:'var(--amber)',fontWeight:'500'}},
+      ['⚠ '+ptsNoCharges.length+' active patient'+(ptsNoCharges.length>1?'s have':' has')+' no charges logged yet']));
+  }
+
   // grouped by date
   f.appendChild(h('div',{cls:'sec'},['By date of service']));
   var allDOS={};
@@ -852,11 +859,64 @@ function mkModal(){
           Object.keys(TM).map(function(k){var o=h('option',{value:k},[TM[k].label]);if(k===np.type)o.selected=true;return o;})
         )]),
     ]));
-    var dobIn=h('input',{cls:'inp',type:'date',value:np.dob||'','@input':function(e){NPT.dob=e.target.value;NPT.age=calcAge(e.target.value);render();}});
-    var ageDisp=h('div',{style:{padding:'9px 12px',border:'1px solid var(--bd2)',borderRadius:'var(--rs)',background:'var(--bg2)',fontSize:'14px',color:np.age?'var(--tx)':'var(--tx3)'}},[np.age?('Age: '+np.age):'Auto-calculated']);
-    sh.appendChild(h('div',{cls:'g2'},[
-      h('div',{cls:'field'},[h('label',{},['Date of birth']),dobIn]),
-      h('div',{cls:'field'},[h('label',{},['Age (auto)']),ageDisp]),
+    // DOB as 3 separate number fields — much faster on iPhone than scroll wheel
+    var mmIn=h('input',{cls:'inp',type:'number',placeholder:'MM',min:'1',max:'12',
+      style:{textAlign:'center',width:'100%'},
+      '@input':function(e){
+        NPT._mm=e.target.value;
+        if(e.target.value.length>=2){ddIn.focus();}
+        trySetDOB();
+      }});
+    var ddIn=h('input',{cls:'inp',type:'number',placeholder:'DD',min:'1',max:'31',
+      style:{textAlign:'center',width:'100%'},
+      '@input':function(e){
+        NPT._dd=e.target.value;
+        if(e.target.value.length>=2){yyIn.focus();}
+        trySetDOB();
+      }});
+    var yyIn=h('input',{cls:'inp',type:'number',placeholder:'YYYY',min:'1900',max:'2099',
+      style:{textAlign:'center',width:'100%'},
+      '@input':function(e){
+        NPT._yy=e.target.value;
+        trySetDOB();
+      }});
+    function trySetDOB(){
+      var mm=NPT._mm,dd=NPT._dd,yy=NPT._yy;
+      if(mm&&dd&&yy&&yy.length===4){
+        var dob=yy+'-'+(mm.length===1?'0':'')+mm+'-'+(dd.length===1?'0':'')+dd;
+        NPT.dob=dob;
+        NPT.age=calcAge(dob);
+        // show age live in the age field
+        ageIn.value=NPT.age;
+      }
+    }
+    var ageIn=h('input',{cls:'inp',type:'number',placeholder:'or type age',min:'0',max:'120',
+      value:np.age||'',
+      style:{textAlign:'center'},
+      '@input':function(e){NPT.age=e.target.value;NPT.dob='';}});
+    // pre-fill MM/DD/YYYY if DOB already set
+    if(np.dob){
+      var parts=np.dob.split('-');
+      if(parts.length===3){
+        mmIn.value=parseInt(parts[1]);
+        ddIn.value=parseInt(parts[2]);
+        yyIn.value=parts[0];
+        NPT._mm=String(parseInt(parts[1]));
+        NPT._dd=String(parseInt(parts[2]));
+        NPT._yy=parts[0];
+      }
+    }
+    sh.appendChild(h('div',{cls:'field'},[
+      h('label',{},['Date of birth']),
+      h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr 1.6fr',gap:'6px',marginBottom:'6px'}},[
+        h('div',{},[h('div',{style:{fontSize:'10px',color:'var(--tx2)',textAlign:'center',marginBottom:'3px'}},['Month']),mmIn]),
+        h('div',{},[h('div',{style:{fontSize:'10px',color:'var(--tx2)',textAlign:'center',marginBottom:'3px'}},['Day']),ddIn]),
+        h('div',{},[h('div',{style:{fontSize:'10px',color:'var(--tx2)',textAlign:'center',marginBottom:'3px'}},['Year']),yyIn]),
+      ]),
+    ]));
+    sh.appendChild(h('div',{cls:'field'},[
+      h('label',{},['Age  (auto-fills from DOB, or type directly)']),
+      ageIn,
     ]));
     sh.appendChild(h('div',{cls:'field'},[h('label',{},['Admission date']),
       h('input',{cls:'inp',type:'date',value:np.admitDate||'','@input':function(e){NPT.admitDate=e.target.value;}})
