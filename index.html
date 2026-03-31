@@ -688,26 +688,55 @@ function dosEditor(pt,d,dc){
   // CPT codes — dropdown
   f.appendChild(h('div',{cls:'sec',style:{marginTop:'0'}},['CPT codes for '+fmtD(d)]));
 
-  // show notice if codes were carried over
-  if(dc.cpt&&dc.cpt.length&&dc._carried){
-    f.appendChild(h('div',{style:{background:'var(--blue2)',border:'1px solid var(--blue3)',borderRadius:'var(--rs)',padding:'8px 12px',marginBottom:'10px',fontSize:'12px',color:'var(--blue)'}},[
-      '↩ CPT codes carried over from previous date — select a different code below to change, or save as-is.',
-    ]));
+  // ── SELECTED CPT CHIPS — shown prominently so carried-over codes are visible ──
+  if(dc.cpt&&dc.cpt.length){
+    var chipBox=h('div',{style:{
+      background:'var(--green2)',border:'1px solid var(--green3)',
+      borderRadius:'var(--rs)',padding:'10px 12px',marginBottom:'10px'
+    }},[
+      h('div',{style:{fontSize:'11px',fontWeight:'700',color:'var(--green)',marginBottom:'7px',textTransform:'uppercase',letterSpacing:'.05em'}},[
+        dc._carried?'↩ Carried over from previous visit — change below if needed':'✓ Selected for this date',
+      ]),
+      h('div',{style:{display:'flex',flexWrap:'wrap',gap:'6px'}},
+        dc.cpt.map(function(c){
+          return h('div',{style:{
+            display:'inline-flex',alignItems:'center',gap:'6px',
+            background:'var(--bg)',border:'2px solid var(--green3)',
+            borderRadius:'8px',padding:'6px 10px',
+          }},[
+            h('span',{style:{fontFamily:'monospace',fontSize:'13px',fontWeight:'800',color:'var(--green)'}},[c.code]),
+            h('span',{style:{fontSize:'12px',color:'var(--tx2)'}},[c.desc]),
+            c.mod?h('span',{cls:'pill blue',style:{fontSize:'10px'}},[c.mod]):null,
+            h('button',{style:{
+              background:'var(--red2)',border:'1px solid var(--red3)',
+              borderRadius:'4px',cursor:'pointer',padding:'1px 5px',
+              fontSize:'12px',color:'var(--red)',fontFamily:'inherit',marginLeft:'2px',
+            },'@click':function(){toggleDOSCPT(pt.id,d,c.code,c.desc);}},['✕']),
+          ]);
+        })
+      ),
+    ]);
+    f.appendChild(chipBox);
+  } else {
+    f.appendChild(h('div',{style:{
+      background:'var(--bg2)',border:'1px dashed var(--bd2)',
+      borderRadius:'var(--rs)',padding:'10px 12px',marginBottom:'10px',
+      fontSize:'13px',color:'var(--tx3)',textAlign:'center',
+    }},['No CPT code selected yet — pick one below']));
   }
 
-  // Build grouped select
+  // ── CPT DROPDOWN — for adding / changing ──
   var selEl=h('select',{cls:'cpt-select'},[]);
-  var defOpt=h('option',{value:''},[' — Select a CPT code — ']);
+  var defOpt=h('option',{value:''},[dc.cpt&&dc.cpt.length?' + Add or change CPT code…':' — Select a CPT code — ']);
   selEl.appendChild(defOpt);
   CPTS.forEach(function(item){
     if(item.g){
-      var og=h('optgroup',{label:item.g},[]);
-      selEl.appendChild(og);
+      selEl.appendChild(h('optgroup',{label:item.g},[]));
     } else {
       var already=!!(dc.cpt||[]).find(function(x){return x.code===item.code;});
-      var o=h('option',{value:item.code},[item.code+' — '+item.desc+(already?' ✓':'')]);
-      if(already) o.style.color='var(--green)';
-      selEl.appendChild(o);
+      if(!already){
+        selEl.appendChild(h('option',{value:item.code},[item.code+' — '+item.desc]));
+      }
     }
   });
   selEl.addEventListener('change',function(){
@@ -715,18 +744,16 @@ function dosEditor(pt,d,dc){
     if(!code)return;
     var item=CPTS.find(function(x){return x.code===code;});
     if(!item)return;
-    if(!(dc.cpt||[]).find(function(x){return x.code===code;})){
-      if(!dc.cpt)dc.cpt=[];
-      dc.cpt.push({code:item.code,desc:item.desc,mod:''});
-      saveDOS(pt.id,d,dc);
-    }
+    if(!dc.cpt)dc.cpt=[];
+    dc.cpt.push({code:item.code,desc:item.desc,mod:''});
+    dc._carried=false;
+    saveDOS(pt.id,d,dc);
     selEl.value='';
     render();
   });
 
   f.appendChild(h('div',{style:{background:'var(--bg2)',border:'1px solid var(--bd)',borderRadius:'var(--rs)',padding:'10px 12px',marginBottom:'10px'}},[
     selEl,
-    h('div',{style:{fontSize:'11px',color:'var(--tx2)'}},['Select a code to add it — you can add multiple codes per date']),
   ]));
 
   // modifiers for selected CPT
