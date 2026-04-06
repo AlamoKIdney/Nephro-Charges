@@ -386,7 +386,7 @@ function render(){
   app.appendChild(page);
   app.appendChild(mkBottomNav());
   app.appendChild(mkBackupBanner());
-  if(MODAL)app.appendChild(mkModal());
+  if(MODAL){app.appendChild(mkModal());if(MODAL==='add')setTimeout(wireDOBFields,0);}
 }
 // ── BACKUP BANNER & AUTO-BACKUP ──────────────────────────────────────────────
 var isIphoneDevice=/iPhone|iPad|iPod/.test(navigator.userAgent);
@@ -416,7 +416,7 @@ function mkBackupBanner(){
       background:'var(--amber2)',color:'var(--amber)',borderTop:'2px solid var(--amber3)',
       fontWeight:'600',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'9px 16px',gap:'10px'
     }},[
-      h('span',{},'\u26a0 '+lastStr+' \u2014 back up now to avoid data loss'),
+      h('span',{},['\u26a0 '+lastStr+' \u2014 back up now to avoid data loss']),
       h('button',{style:{background:'var(--amber)',color:'#fff',border:'none',borderRadius:'6px',padding:'5px 12px',fontSize:'12px',fontWeight:'700',cursor:'pointer',fontFamily:'inherit',flexShrink:'0'},'@click':function(){autoBackupNow();}},['\ud83d\udcbe Back up now']),
     ]);
   }
@@ -438,7 +438,8 @@ function autoBackupNow(){
     var a=document.createElement('a');a.href=url;a.download=filename;a.style.display='none';
     document.body.appendChild(a);a.click();
     setTimeout(function(){URL.revokeObjectURL(url);document.body.removeChild(a);},1500);
-    markBackupDone();render();
+    markBackupDone();
+    if(!MODAL)render();
     flash('\u2705 Backup saved: '+filename+' \u2014 move to WorkDrive to sync','green');
   }catch(e){flash('Backup failed \u2014 try manually from Summary \u2192 \ud83d\udcbe Backup','amber');}
 }
@@ -454,7 +455,7 @@ function initAutoBackup(){
 function mkTopbar(){
   return h('div',{cls:'topbar'},[
     h('div',{},[h('div',{cls:'brand'},['Nephro Charge Capture']),h('div',{cls:'brand-sub'},[DB.cfg.practice])]),
-    h('div',{cls:'tbar-right'},[h('button',{cls:'icon-btn','@click':function(){MODAL='settings';render();}},['⚙'])]),
+    h('div',{cls:'tbar-right'},[h('button',{cls:'icon-btn','@click':function(){clearTimeout(TOAST_T);TOAST=null;MODAL='settings';render();}},['⚙'])]),
   ]);
 }
 function mkBottomNav(){
@@ -472,7 +473,7 @@ function censusView(){
   var f=document.createDocumentFragment();
   f.appendChild(h('div',{cls:'btn-row',style:{marginBottom:'14px'}},[
     h('button',{cls:'btn blue','@click':function(){openAddModal();}},['+ Add patient']),
-    h('button',{cls:'btn sm','@click':function(){MODAL='export';render();}},['💾 Export']),
+    h('button',{cls:'btn sm','@click':function(){clearTimeout(TOAST_T);TOAST=null;MODAL='export';render();}},['💾 Export']),
   ]));
   f.appendChild(h('div',{cls:'sec first'},['🟢 Active inpatients ('+active.length+')']));
   if(!active.length){
@@ -928,9 +929,9 @@ function summaryView(){
     h('div',{cls:'stat'},[h('div',{cls:'stat-n'},[String(totalCPT)]),h('div',{cls:'stat-l'},['CPT codes'])]),
   ]));
   f.appendChild(h('div',{cls:'btn-row',style:{marginBottom:'16px'}},[
-    h('button',{cls:'btn blue',style:{flex:'1'},'@click':function(){MODAL='email';render();}},['📤 Send charges']),
+    h('button',{cls:'btn blue',style:{flex:'1'},'@click':function(){clearTimeout(TOAST_T);TOAST=null;MODAL='email';render();}},['📤 Send charges']),
     h('button',{cls:'btn',style:{flex:'1'},'@click':exportCSV},['⬇ CSV']),
-    h('button',{cls:'btn','@click':function(){MODAL='export';render();}},['💾 Backup']),
+    h('button',{cls:'btn','@click':function(){clearTimeout(TOAST_T);TOAST=null;MODAL='export';render();}},['💾 Backup']),
   ]));
   if(!totalPts){f.appendChild(h('div',{cls:'empty'},[h('div',{cls:'empty-icon'},['📋']),h('div',{style:{fontWeight:'700',marginBottom:'8px'}},['No patients yet'])]));return h('div',{},[f]);}
 
@@ -989,6 +990,75 @@ function summaryView(){
 }
 
 // ── MODALS ───────────────────────────────────────────────────────────────────
+
+// ── ADD PATIENT FORM ─────────────────────────────────────────────────────────
+function submitAddPatient(){
+  var nameEl=document.getElementById('_ptName');
+  var name=(nameEl?nameEl.value||'':'').trim();
+  if(!name){
+    if(nameEl){nameEl.style.borderColor='red';nameEl.focus();}
+    // Don't flash - it would call render() in some paths. Just visual feedback only.
+    return;
+  }
+  var room  = (document.getElementById('_ptRoom')   ? document.getElementById('_ptRoom').value   : '').trim();
+  var type  =  document.getElementById('_ptType')   ? document.getElementById('_ptType').value   : 'followup';
+  var mm    = (document.getElementById('_ptMM')     ? document.getElementById('_ptMM').value     : '').replace(/\D/g,'');
+  var dd    = (document.getElementById('_ptDD')     ? document.getElementById('_ptDD').value     : '').replace(/\D/g,'');
+  var yy    = (document.getElementById('_ptYY')     ? document.getElementById('_ptYY').value     : '').replace(/\D/g,'');
+  var ageV  = (document.getElementById('_ptAge')    ? document.getElementById('_ptAge').value    : '').trim();
+  var admit =  document.getElementById('_ptAdmit')  ? document.getElementById('_ptAdmit').value  : today();
+  var dob='';
+  if(mm&&dd&&yy&&yy.length===4){
+    dob=yy+'-'+(mm.length===1?'0':'')+mm+'-'+(dd.length===1?'0':'')+dd;
+  }
+  var age=ageV||calcAge(dob)||'';
+  DB.patients.push({
+    id:Date.now(),name:name,room:room,dob:dob,age:age,
+    type:type,admitDate:admit||today(),
+    status:'active',facesheet:null,icd:[],charges:{}
+  });
+  save();
+  MODAL=null;  // close modal BEFORE any render/flash
+  TOAST=null;
+  clearTimeout(TOAST_T);
+  render();    // render census — modal is now closed so this is safe
+  flash('Patient added — tap their name to add charges');
+}
+
+// Wire up DOB auto-tab and age calculation via event delegation
+// Called after modal renders
+function wireDOBFields(){
+  var mm=document.getElementById('_ptMM');
+  var dd=document.getElementById('_ptDD');
+  var yy=document.getElementById('_ptYY');
+  var ag=document.getElementById('_ptAge');
+  if(!mm||!dd||!yy)return;
+  var recalc=function(){
+    var m=(mm.value||'').replace(/\D/g,'');
+    var d=(dd.value||'').replace(/\D/g,'');
+    var y=(yy.value||'').replace(/\D/g,'');
+    if(m&&d&&y&&y.length===4){
+      var dob2=y+'-'+(m.length===1?'0':'')+m+'-'+(d.length===1?'0':'')+d;
+      var a=calcAge(dob2);
+      if(a&&ag)ag.value=a;
+    }
+  };
+  mm.addEventListener('input',function(){
+    mm.value=mm.value.replace(/\D/g,'').slice(0,2);
+    if(mm.value.length>=2&&dd)dd.focus();
+    recalc();
+  });
+  dd.addEventListener('input',function(){
+    dd.value=dd.value.replace(/\D/g,'').slice(0,2);
+    if(dd.value.length>=2&&yy)yy.focus();
+    recalc();
+  });
+  yy.addEventListener('input',function(){
+    yy.value=yy.value.replace(/\D/g,'').slice(0,4);
+    recalc();
+  });
+}
+
 // ── SYNC MODAL HELPERS ────────────────────────────────────────────────────────
 function mkMethodBtn(method, label, current){
   var active = current===method;
@@ -1021,92 +1091,51 @@ function mkModal(){
 
   if(MODAL==='add'){
     sh.appendChild(h('div',{cls:'modal-title'},['Add patient']));
-    var np=NPT;
-    var fld=function(lbl,key,ph,tp){
-      return h('div',{cls:'field'},[h('label',{},[lbl]),
-        h('input',{cls:'inp',type:tp||'text',placeholder:ph||'',value:np[key]||'',
-          '@input':function(e){NPT[key]=e.target.value;if(key==='dob'){NPT.age=calcAge(e.target.value);render();}}
-        })]);
-    };
-    sh.appendChild(fld('Patient name *','name','Last, First'));
-    sh.appendChild(h('div',{cls:'g2'},[
-      fld('Room','room','4B-12'),
-      h('div',{cls:'field'},[h('label',{},['Visit type']),
-        h('select',{cls:'sel','@change':function(e){NPT.type=e.target.value;}},
-          Object.keys(TM).map(function(k){var o=h('option',{value:k},[TM[k].label]);if(k===np.type)o.selected=true;return o;})
-        )]),
-    ]));
-    // DOB as 3 separate fields — avoids iPhone scroll wheel
-    var ageIn=h('input',{cls:'inp',type:'number',placeholder:'or type age',min:'0',max:'120',
-      value:np.age||'',
-      style:{textAlign:'center'},
-      '@input':function(e){NPT.age=e.target.value;NPT.dob='';}});
-    var trySetDOB=function(){
-      var mm=NPT._mm,dd=NPT._dd,yy=NPT._yy;
-      if(mm&&dd&&yy&&yy.length===4){
-        var dob=yy+'-'+(mm.length===1?'0':'')+mm+'-'+(dd.length===1?'0':'')+dd;
-        NPT.dob=dob;
-        NPT.age=calcAge(dob);
-        ageIn.value=NPT.age;
-      }
-    };
-    var mmIn=h('input',{cls:'inp',type:'text',inputmode:'numeric',placeholder:'MM',
-      maxlength:'2',pattern:'[0-9]*',
-      style:{textAlign:'center',width:'100%'},
-      '@input':function(e){
-        var v=e.target.value.replace(/\D/g,'').slice(0,2);
-        e.target.value=v;NPT._mm=v;
-        if(v.length>=2){ddIn.focus();}
-        trySetDOB();
-      }});
-    var ddIn=h('input',{cls:'inp',type:'text',inputmode:'numeric',placeholder:'DD',
-      maxlength:'2',pattern:'[0-9]*',
-      style:{textAlign:'center',width:'100%'},
-      '@input':function(e){
-        var v=e.target.value.replace(/\D/g,'').slice(0,2);
-        e.target.value=v;NPT._dd=v;
-        if(v.length>=2){yyIn.focus();}
-        trySetDOB();
-      }});
-    var yyIn=h('input',{cls:'inp',type:'text',inputmode:'numeric',placeholder:'YYYY',
-      maxlength:'4',pattern:'[0-9]*',
-      style:{textAlign:'center',width:'100%'},
-      '@input':function(e){
-        var v=e.target.value.replace(/\D/g,'').slice(0,4);
-        e.target.value=v;NPT._yy=v;
-        if(v.length===4)trySetDOB();
-      }});
-    // pre-fill MM/DD/YYYY if DOB already set
-    if(np.dob){
-      var parts=np.dob.split('-');
-      if(parts.length===3){
-        mmIn.value=parseInt(parts[1]);
-        ddIn.value=parseInt(parts[2]);
-        yyIn.value=parts[0];
-        NPT._mm=String(parseInt(parts[1]));
-        NPT._dd=String(parseInt(parts[2]));
-        NPT._yy=parts[0];
-      }
-    }
+
+    // ── NAME (required) ──
     sh.appendChild(h('div',{cls:'field'},[
-      h('label',{},['Date of birth']),
-      h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr 1.6fr',gap:'6px',marginBottom:'6px'}},[
-        h('div',{},[h('div',{style:{fontSize:'10px',color:'var(--tx2)',textAlign:'center',marginBottom:'3px'}},['Month']),mmIn]),
-        h('div',{},[h('div',{style:{fontSize:'10px',color:'var(--tx2)',textAlign:'center',marginBottom:'3px'}},['Day']),ddIn]),
-        h('div',{},[h('div',{style:{fontSize:'10px',color:'var(--tx2)',textAlign:'center',marginBottom:'3px'}},['Year']),yyIn]),
+      h('label',{},['Patient name *']),
+      h('input',{cls:'inp',id:'_ptName',type:'text',placeholder:'Last, First',autocomplete:'off'}),
+    ]));
+
+    // ── ADD BUTTON AT TOP — stays visible even when keyboard is open ──
+    sh.appendChild(h('button',{cls:'btn blue block',style:{padding:'13px',marginBottom:'16px'},'@click':submitAddPatient},['Add patient']));
+
+    // ── DIVIDER ──
+    sh.appendChild(h('div',{style:{fontSize:'11px',fontWeight:'700',color:'var(--tx2)',letterSpacing:'.06em',textTransform:'uppercase',marginBottom:'10px'}},['Optional details']));
+
+    // ── ROOM + VISIT TYPE ──
+    sh.appendChild(h('div',{cls:'g2'},[
+      h('div',{cls:'field'},[
+        h('label',{},['Room']),
+        h('input',{cls:'inp',id:'_ptRoom',type:'text',placeholder:'4B-12',autocomplete:'off'}),
+      ]),
+      h('div',{cls:'field'},[
+        h('label',{},['Visit type']),
+        h('select',{cls:'sel',id:'_ptType'},
+          Object.keys(TM).map(function(k){
+            var o=h('option',{value:k},[TM[k].label]);
+            if(k==='followup')o.selected=true;
+            return o;
+          })),
       ]),
     ]));
+
+    // ── DOB ──
     sh.appendChild(h('div',{cls:'field'},[
-      h('label',{},['Age  (auto-fills from DOB, or type directly)']),
-      ageIn,
+      h('label',{},['Date of birth']),
+      h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr 1.6fr',gap:'6px'}},[
+        h('div',{},[h('div',{style:{fontSize:'10px',color:'var(--tx2)',textAlign:'center',marginBottom:'3px'}},['Month']),h('input',{cls:'inp',id:'_ptMM',type:'text',inputmode:'numeric',placeholder:'MM',maxlength:'2',style:{textAlign:'center',width:'100%'}})]),
+        h('div',{},[h('div',{style:{fontSize:'10px',color:'var(--tx2)',textAlign:'center',marginBottom:'3px'}},['Day']),  h('input',{cls:'inp',id:'_ptDD',type:'text',inputmode:'numeric',placeholder:'DD',maxlength:'2',style:{textAlign:'center',width:'100%'}})]),
+        h('div',{},[h('div',{style:{fontSize:'10px',color:'var(--tx2)',textAlign:'center',marginBottom:'3px'}},['Year']), h('input',{cls:'inp',id:'_ptYY',type:'text',inputmode:'numeric',placeholder:'YYYY',maxlength:'4',style:{textAlign:'center',width:'100%'}})]),
+      ]),
     ]));
-    sh.appendChild(h('div',{cls:'field'},[h('label',{},['Admission date']),
-      h('input',{cls:'inp',type:'date',value:np.admitDate||'','@input':function(e){NPT.admitDate=e.target.value;}})
+    sh.appendChild(h('div',{cls:'g2'},[
+      h('div',{cls:'field'},[h('label',{},['Age']),h('input',{cls:'inp',id:'_ptAge',type:'text',inputmode:'numeric',placeholder:'e.g. 67',maxlength:'3',style:{textAlign:'center'}})]),
+      h('div',{cls:'field'},[h('label',{},['Admission date']),h('input',{cls:'inp',id:'_ptAdmit',type:'date',value:today()})]),
     ]));
-    sh.appendChild(h('div',{cls:'btn-row',style:{marginTop:'8px'}},[
-      h('button',{cls:'btn blue',style:{flex:'1',padding:'12px'},'@click':addPatient},['Add patient']),
-      h('button',{cls:'btn','@click':function(){MODAL=null;render();}},['Cancel']),
-    ]));
+
+    sh.appendChild(h('button',{cls:'btn block','@click':function(){MODAL=null;render();}},['Cancel']));
   }
 
   if(MODAL==='email'){
@@ -1188,7 +1217,7 @@ function mkModal(){
     sh.appendChild(h('div',{cls:'divider'}));
     sh.appendChild(h('div',{style:{fontSize:'12px',color:'var(--tx2)',marginBottom:'10px'}},[LS?'✅ Data persists on this device. ':'⚠ Session only — export backup below. ',DB.patients.length+' patient'+(DB.patients.length!==1?'s':'')+' stored.']));
     sh.appendChild(h('div',{cls:'btn-row'},[
-      h('button',{cls:'btn sm','@click':function(){MODAL='export';render();}},['🔄 Sync / backup']),
+      h('button',{cls:'btn sm','@click':function(){clearTimeout(TOAST_T);TOAST=null;MODAL='export';render();}},['🔄 Sync / backup']),
       h('button',{cls:'btn sm','@click':importData},['📂 Import backup']),
       LS?h('button',{cls:'btn sm red','@click':function(){if(confirm('Delete ALL data permanently?')){sDel(SK);DB={patients:[],cfg:{practice:'Nephrology Associates',email:''}};MODAL=null;flash('Cleared','amber');render();}}},['🗑 Clear all']):null,
     ]));
@@ -1311,7 +1340,10 @@ function mkModal(){
 }
 
 // ── ACTIONS ──────────────────────────────────────────────────────────────────
-function openAddModal(){NPT={name:'',room:'',dob:'',age:'',type:'followup',admitDate:today()};MODAL='add';render();}
+function openAddModal(){
+  clearTimeout(TOAST_T);TOAST=null; // cancel any pending render() from previous flash
+  MODAL='add';render();
+}
 
 function addPatient(){
   if(!NPT.name.trim())return;
@@ -1736,7 +1768,17 @@ function dlText(content,filename,mime){
   }
 }
 
-function flash(msg,t){clearTimeout(TOAST_T);TOAST={m:msg,t:t||'green'};render();TOAST_T=setTimeout(function(){TOAST=null;render();},3500);}
+function flash(msg,t){
+  clearTimeout(TOAST_T);
+  TOAST={m:msg,t:t||'green'};
+  // Only re-render if no modal is open — rendering while modal is open
+  // destroys the form inputs and wipes whatever the user has typed
+  if(!MODAL)render();
+  TOAST_T=setTimeout(function(){
+    TOAST=null;
+    if(!MODAL)render();
+  },3500);
+}
 
 render();
 setupDragDrop();
