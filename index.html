@@ -175,6 +175,7 @@ function sSet(k,v){try{if(LS)localStorage.setItem(k,v);MEM[k]=v;}catch(e){MEM[k]
 function sDel(k){try{if(LS)localStorage.removeItem(k);}catch(e){}delete MEM[k];}
 
 var SK='ncc_v6';
+var BK='ncc_lastbackup'; // stores timestamp of last backup
 function loadDB(){try{var r=sGet(SK);if(r)return JSON.parse(r);}catch(e){}return{patients:[],cfg:{practice:'Nephrology Associates',email:''}};}
 var DB=loadDB();
 function save(){try{sSet(SK,JSON.stringify(DB));}catch(e){}}
@@ -308,6 +309,23 @@ var ICD_CATS={
     ['I28.0','Renal artery stenosis'],['I70.1','Atherosclerosis of renal artery'],
     ['N28.9','Disorder of kidney, unspec'],['B20','HIV disease (immunocompromised)'],
   ],
+  'Hepatology':[
+    ['K72.00','Acute liver failure without coma'],['K72.01','Acute liver failure with coma'],
+    ['K72.10','Chronic liver failure without coma'],['K72.11','Chronic liver failure with coma'],
+    ['K72.90','Hepatic failure, unspecified, without coma'],['K72.91','Hepatic failure, unspec, with coma'],
+    ['K70.10','Alcoholic hepatitis without ascites'],['K70.11','Alcoholic hepatitis with ascites'],
+    ['K70.30','Alcoholic cirrhosis without ascites'],['K70.31','Alcoholic cirrhosis with ascites'],
+    ['K74.60','Unspecified cirrhosis of liver'],['K74.69','Other cirrhosis of liver'],
+    ['K76.6','Portal hypertension'],['K70.40','Alcoholic hepatic failure without coma'],
+    ['K76.7','Hepatorenal syndrome'],['K76.1','Chronic passive congestion of liver'],
+    ['B18.1','Chronic viral hepatitis B'],['B18.2','Chronic viral hepatitis C'],
+    ['B19.10','Unspecified viral hepatitis B'],['B19.20','Unspecified viral hepatitis C'],
+    ['Z94.4','Liver transplant status'],['T86.40','Liver transplant rejection, unspec'],
+    ['T86.41','Liver transplant rejection'],['T86.42','Liver transplant failure'],
+    ['T86.43','Liver transplant infection'],['T86.49','Liver transplant complication'],
+    ['Z48.23','Encounter after liver transplant'],['K83.1','Obstruction of bile duct'],
+    ['K80.50','Calculus of bile duct without cholangitis'],['K75.9','Inflammatory liver disease, unspec'],
+  ],
 };
 // Flat list for search/custom (all ICD codes combined)
 var ICDS_FLAT=[];
@@ -367,9 +385,72 @@ function render(){
   if(V==='summary')page.appendChild(summaryView());
   app.appendChild(page);
   app.appendChild(mkBottomNav());
-  app.appendChild(h('div',{cls:'banner'},[LS?'✅ Data auto-saved on this device':'⚠ Session only — use Export in Summary to back up']));
+  app.appendChild(mkBackupBanner());
   if(MODAL)app.appendChild(mkModal());
 }
+// ── BACKUP BANNER & AUTO-BACKUP ──────────────────────────────────────────────
+var isIphoneDevice=/iPhone|iPad|iPod/.test(navigator.userAgent);
+var isWindowsDevice=/Win/.test(navigator.platform||navigator.userAgent);
+
+function getLastBackup(){try{var v=sGet(BK);return v?parseInt(v):null;}catch(e){return null;}}
+function markBackupDone(){try{sSet(BK,String(Date.now()));}catch(e){}}
+function hoursSinceBackup(){var last=getLastBackup();if(!last)return 9999;return(Date.now()-last)/(1000*60*60);}
+
+function mkBackupBanner(){
+  var last=getLastBackup();
+  var hrs=hoursSinceBackup();
+  var hasData=DB.patients.length>0;
+  if(!LS){
+    return h('div',{cls:'banner',style:{background:'var(--red2)',color:'var(--red)',borderTop:'1px solid var(--red3)',fontWeight:'600'}},
+      ['\u26a0 Data not being saved \u2014 go to Summary \u2192 \ud83d\udcbe Backup now']);
+  }
+  if(!hasData||!isWindowsDevice){
+    var last2=getLastBackup();
+    var ago='';
+    if(last2){var h2=hoursSinceBackup();ago=' \u00b7 Last backup: '+(h2<1?'just now':h2<24?Math.round(h2)+'h ago':Math.round(h2/24)+'d ago');}
+    return h('div',{cls:'banner'},['\u2705 Data auto-saved on this device'+ago]);
+  }
+  if(isWindowsDevice&&hrs>24){
+    var lastStr=last?('Last backup '+Math.round(hrs)+'h ago'):'Never backed up';
+    return h('div',{cls:'banner',style:{
+      background:'var(--amber2)',color:'var(--amber)',borderTop:'2px solid var(--amber3)',
+      fontWeight:'600',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'9px 16px',gap:'10px'
+    }},[
+      h('span',{},'\u26a0 '+lastStr+' \u2014 back up now to avoid data loss'),
+      h('button',{style:{background:'var(--amber)',color:'#fff',border:'none',borderRadius:'6px',padding:'5px 12px',fontSize:'12px',fontWeight:'700',cursor:'pointer',fontFamily:'inherit',flexShrink:'0'},'@click':function(){autoBackupNow();}},['\ud83d\udcbe Back up now']),
+    ]);
+  }
+  var ago2='';if(last){var h3=hoursSinceBackup();ago2=' \u00b7 Last backup: '+(h3<1?'just now':h3<24?Math.round(h3)+'h ago':Math.round(h3/24)+'d ago');}
+  return h('div',{cls:'banner'},[
+    '\u2705 Data saved'+ago2+' \u00b7 Auto-backup active on Windows',
+  ]);
+}
+
+function autoBackupNow(){
+  if(!DB.patients.length)return;
+  var exp=JSON.parse(JSON.stringify(DB));
+  exp.patients.forEach(function(p){p.facesheet=null;});
+  var json=JSON.stringify(exp,null,2);
+  var filename='nephro_backup_'+today()+'.json';
+  try{
+    var blob=new Blob([json],{type:'application/json'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');a.href=url;a.download=filename;a.style.display='none';
+    document.body.appendChild(a);a.click();
+    setTimeout(function(){URL.revokeObjectURL(url);document.body.removeChild(a);},1500);
+    markBackupDone();render();
+    flash('\u2705 Backup saved: '+filename+' \u2014 move to WorkDrive to sync','green');
+  }catch(e){flash('Backup failed \u2014 try manually from Summary \u2192 \ud83d\udcbe Backup','amber');}
+}
+
+function initAutoBackup(){
+  if(!isWindowsDevice||!DB.patients.length)return;
+  if(hoursSinceBackup()<12)return;
+  setTimeout(function(){
+    autoBackupNow();
+  },4000);
+}
+
 function mkTopbar(){
   return h('div',{cls:'topbar'},[
     h('div',{},[h('div',{cls:'brand'},['Nephro Charge Capture']),h('div',{cls:'brand-sub'},[DB.cfg.practice])]),
@@ -518,35 +599,78 @@ function chargeView(){
   f.appendChild(h('div',{cls:'sec'},['Dates of service (CPT only — diagnoses shared above)']));
   var charges=pt.charges||{};
   var dosKeys=Object.keys(charges).sort(function(a,b){return b.localeCompare(a);});
-  var newDosInp=h('input',{cls:'inp',type:'date',value:today(),style:{flex:'1'}});
-  f.appendChild(h('div',{style:{display:'flex',gap:'8px',marginBottom:'12px',alignItems:'center'}},[
-    newDosInp,
-    h('button',{cls:'btn blue sm','@click':function(){
-      var d=newDosInp.value;
-      if(!d){flash('Pick a date','amber');return;}
+
+  // Multi-date entry panel
+  var fromInp=h('input',{cls:'inp',type:'date',value:today(),style:{flex:'1'}});
+  var toInp=h('input',{cls:'inp',type:'date',value:today(),style:{flex:'1'}});
+
+  f.appendChild(h('div',{style:{background:'var(--bg2)',border:'1px solid var(--bd)',borderRadius:'var(--rs)',padding:'11px 12px',marginBottom:'12px'}},[
+    // single date row
+    h('div',{style:{fontSize:'11px',fontWeight:'700',color:'var(--tx2)',marginBottom:'7px',textTransform:'uppercase',letterSpacing:'.05em'}},['Add date(s) of service']),
+    h('div',{style:{display:'grid',gridTemplateColumns:'1fr auto 1fr',gap:'6px',alignItems:'center',marginBottom:'8px'}},[
+      h('div',{},[
+        h('div',{style:{fontSize:'10px',color:'var(--tx2)',marginBottom:'3px'}},['From']),
+        fromInp,
+      ]),
+      h('div',{style:{textAlign:'center',color:'var(--tx3)',fontSize:'12px',paddingTop:'16px'}},['→']),
+      h('div',{},[
+        h('div',{style:{fontSize:'10px',color:'var(--tx2)',marginBottom:'3px'}},['To (same for single day)']),
+        toInp,
+      ]),
+    ]),
+    h('button',{cls:'btn blue block','@click':function(){
+      var from=fromInp.value, to=toInp.value;
+      if(!from){flash('Pick a start date','amber');return;}
+      if(!to)to=from;
+      if(to<from){flash('End date must be on or after start date','amber');return;}
+
+      // Build list of dates between from and to (inclusive)
+      var dates=[];
+      var cur=new Date(from+'T12:00');
+      var end=new Date(to+'T12:00');
+      var MAX_DAYS=31;
+      while(cur<=end&&dates.length<MAX_DAYS){
+        dates.push(cur.toISOString().slice(0,10));
+        cur.setDate(cur.getDate()+1);
+      }
+
       var p2=getPt(pt.id);
       if(!p2.charges)p2.charges={};
-      if(!p2.charges[d]){
-        // pre-fill CPT codes from the most recent previous DOS
-        var prevKeys=Object.keys(p2.charges).sort(function(a,b){return b.localeCompare(a);});
-        var prevCPT=[];
-        if(prevKeys.length){
-          var prevDC=p2.charges[prevKeys[0]];
-          if(prevDC&&prevDC.cpt&&prevDC.cpt.length){
-            // deep copy so modifying new DOS doesn't affect old one
-            prevCPT=JSON.parse(JSON.stringify(prevDC.cpt));
-          }
-        }
-        p2.charges[d]={cpt:prevCPT,notes:'',_carried:prevCPT.length>0};
-        if(prevCPT.length){
-          flash('CPT codes carried over from '+fmtD(prevKeys[0])+'  — change if needed','blue');
+
+      // Get CPT from most recent existing DOS to carry over
+      var prevKeys=Object.keys(p2.charges).sort(function(a,b){return b.localeCompare(a);});
+      var prevCPT=[];
+      if(prevKeys.length){
+        var prevDC=p2.charges[prevKeys[0]];
+        if(prevDC&&prevDC.cpt&&prevDC.cpt.length){
+          prevCPT=JSON.parse(JSON.stringify(prevDC.cpt));
         }
       }
-      save();EDOS=d;render();
-    }},['+ Add date']),
+
+      var added=0;
+      dates.forEach(function(d){
+        if(!p2.charges[d]){
+          p2.charges[d]={cpt:JSON.parse(JSON.stringify(prevCPT)),notes:'',_carried:prevCPT.length>0};
+          added++;
+        }
+      });
+      save();
+
+      // Open the first new date
+      var firstNew=dates.find(function(d){return p2.charges[d]&&p2.charges[d]._carried!==undefined;});
+      EDOS=dates[0];
+
+      if(dates.length===1){
+        flash(added?'Date added'+(prevCPT.length?' — CPT carried over':''):'Date already exists','blue');
+      } else {
+        flash(added+' date'+(added!==1?'s':'')+' added'+(prevCPT.length?' — CPT carried over to each':''),'blue');
+      }
+      render();
+    }},['+ Add date'+(dosKeys.length?' (carries over last CPT)':'')]),
   ]));
+
   if(!dosKeys.length){
-    f.appendChild(h('div',{style:{fontSize:'13px',color:'var(--tx3)',padding:'8px 0',marginBottom:'8px'}},['No dates of service yet — pick a date above and tap + Add date']));
+    f.appendChild(h('div',{style:{fontSize:'13px',color:'var(--tx3)',padding:'4px 0',marginBottom:'8px'}},['No dates yet — pick a date or range above']));
   }
   dosKeys.forEach(function(d){
     var dc=charges[d];
@@ -1502,8 +1626,10 @@ function exportCSV(){
 
 function exportJSON(){
   var exp=JSON.parse(JSON.stringify(DB));
-  exp.patients.forEach(function(p){p.facesheet=null;});// strip images to keep file small
+  exp.patients.forEach(function(p){p.facesheet=null;});
   dlText(JSON.stringify(exp,null,2),'nephro_backup_'+today()+'.json','application/json');
+  markBackupDone();
+  render();
 }
 
 // Share the backup file via iOS share sheet (AirDrop, WorkDrive, Zoho Mail, etc.)
@@ -1522,7 +1648,7 @@ function shareBackup(){
         title:'Nephro Backup — '+today(),
         text:'Nephrology charge capture backup — import on other device',
         files:[file]
-      }).then(function(){flash('Backup shared ✓');})
+      }).then(function(){markBackupDone();flash('Backup shared ✓');render();})
         .catch(function(e){if(e.name!=='AbortError')exportJSON();});
       return;
     }
@@ -1619,6 +1745,7 @@ function flash(msg,t){clearTimeout(TOAST_T);TOAST={m:msg,t:t||'green'};render();
 
 render();
 setupDragDrop();
+initAutoBackup();
 </script>
 
 <script>
