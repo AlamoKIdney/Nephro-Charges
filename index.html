@@ -326,6 +326,37 @@ var ICD_CATS={
     ['Z48.23','Encounter after liver transplant'],['K83.1','Obstruction of bile duct'],
     ['K80.50','Calculus of bile duct without cholangitis'],['K75.9','Inflammatory liver disease, unspec'],
   ],
+  'General':[
+    ['Z01.810','Preprocedural exam, cardiovascular'],
+    ['Z01.811','Preprocedural exam, respiratory'],
+    ['Z01.818','Preprocedural exam, other'],
+    ['Z01.89','Encounter for other special exam'],
+    ['I95.0','Idiopathic hypotension'],
+    ['I95.1','Orthostatic hypotension'],
+    ['I95.2','Hypotension due to drugs'],
+    ['I95.9','Hypotension, unspecified'],
+    ['Z79.899','Long-term immunosuppression medication'],
+    ['Z79.52','Long-term systemic steroids'],
+    ['Z79.51','Long-term inhaled steroids'],
+    ['Z79.4','Long-term insulin use'],
+    ['E11.65','T2DM with hyperglycemia'],
+    ['E11.9','T2DM without complications'],
+    ['E11.649','T2DM with hypoglycemia'],
+    ['E11.22','T2DM with diabetic CKD'],
+    ['E11.65','T2DM with CKD — code also N18.x'],
+    ['E10.65','T1DM with hyperglycemia'],
+    ['E10.9','T1DM without complications'],
+    ['E10.649','T1DM with hypoglycemia'],
+    ['E10.22','T1DM with diabetic CKD'],
+    ['E10.65','T1DM with CKD — code also N18.x'],
+    ['A41.9','Sepsis, unspecified organism'],
+    ['R65.20','Severe sepsis without septic shock'],
+    ['R65.21','Severe sepsis with septic shock'],
+    ['N19','Unspecified kidney failure'],
+    ['D63.1','Anemia in CKD'],
+    ['E55.9','Vitamin D deficiency, unspecified'],
+    ['I10','Essential hypertension'],
+  ],
 };
 // Flat list for search/custom (all ICD codes combined)
 var ICDS_FLAT=[];
@@ -334,7 +365,9 @@ Object.keys(ICD_CATS).forEach(function(cat){ICD_CATS[cat].forEach(function(p){IC
 // ── STATE ────────────────────────────────────────────────────────────────────
 var V='census';
 var MODAL=null;
-var MODAL_SYNC_METHOD='zoho'; // which sync method tab is shown
+var MODAL_SYNC_METHOD='zoho';
+var EDITING_PT=null; // patient id being edited inline
+var QUICK_ROUND=false; // quick round mode // which sync method tab is shown
 var TOAST=null,TOAST_T=null;
 var PID=null;
 var EDOS=null;
@@ -346,7 +379,13 @@ var SHOW_DISCHARGED=false;
 // ICD editing state (patient-level)
 var ICDQ_PT=''; // search for patient-level ICD
 
-function today(){return new Date().toISOString().slice(0,10);}
+function today(){
+  var d=new Date();
+  var y=d.getFullYear();
+  var m=String(d.getMonth()+1).padStart(2,'0');
+  var day=String(d.getDate()).padStart(2,'0');
+  return y+'-'+m+'-'+day;
+}
 function calcAge(dob){
   if(!dob)return '';
   try{var d=new Date(dob+'T12:00'),n=new Date(),a=n.getFullYear()-d.getFullYear(),m=n.getMonth()-d.getMonth();if(m<0||(m===0&&n.getDate()<d.getDate()))a--;return a>=0?String(a):''}catch(e){return '';}
@@ -466,6 +505,201 @@ function mkBottomNav(){
 }
 function nb(icon,lbl,on,fn){return h('button',{cls:'nb'+(on?' on':''),'@click':fn},[h('div',{cls:'nb-icon'},[icon]),lbl]);}
 
+// ── QUICK ROUND VIEW ─────────────────────────────────────────────────────────
+function quickRoundView(active){
+  var d=today();
+  var f=document.createDocumentFragment();
+
+  // header
+  f.appendChild(h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'14px'}},[
+    h('div',{},[
+      h('div',{style:{fontWeight:'700',fontSize:'16px'}},['⚡ Quick round — '+fmtD(d)]),
+      h('div',{style:{fontSize:'12px',color:'var(--tx2)',marginTop:'2px'}},['CPT and ICD carried from previous DOS. Change below, then tap ✓ Done.']),
+    ]),
+    h('button',{cls:'btn sm','@click':function(){QUICK_ROUND=false;render();}},['✕ Exit']),
+  ]));
+
+  // one card per active patient
+  active.forEach(function(pt){
+    var charges=pt.charges||{};
+    var prevKeys=Object.keys(charges).sort(function(a,b){return b.localeCompare(a);});
+    var prevDC=prevKeys.length?charges[prevKeys[0]]:null;
+
+    // Carry over CPT and ICD from latest DOS
+    var carryCPT=prevDC&&prevDC.cpt&&prevDC.cpt.length?JSON.parse(JSON.stringify(prevDC.cpt)):[];
+    var carryICD=prevDC&&prevDC.icd&&prevDC.icd.length?JSON.parse(JSON.stringify(prevDC.icd)):[];
+
+    // If today's DOS already exists, use it
+    var dc=charges[d];
+    var isNew=!dc;
+    if(!dc){dc={cpt:carryCPT,icd:carryICD,notes:'',_carried:carryCPT.length>0,_icdCarried:carryICD.length>0};}
+
+    var tm=TM[pt.type]||TM.followup;
+
+    // Build the card
+    var card=h('div',{cls:'card',style:{marginBottom:'10px'}},[]);
+
+    // Patient name row
+    card.appendChild(h('div',{style:{display:'flex',alignItems:'center',gap:'10px',marginBottom:'10px'}},[
+      h('div',{cls:'av',style:{background:tm.bg,color:tm.fg,width:'36px',height:'36px',fontSize:'12px'}},[initials(pt.name)]),
+      h('div',{style:{flex:'1'}},[
+        h('div',{style:{fontWeight:'700',fontSize:'14px'}},[
+          pt.name,
+          pt.age?h('span',{style:{fontWeight:'400',fontSize:'12px',color:'var(--tx2)',marginLeft:'6px'}},['Age '+pt.age]):null,
+          pt.room?h('span',{style:{fontWeight:'400',fontSize:'12px',color:'var(--tx2)',marginLeft:'4px'}},['· Rm '+pt.room]):null,
+        ]),
+        h('div',{style:{fontSize:'11px',color:'var(--tx2)',marginTop:'2px'}},[
+          isNew?(prevKeys.length?'New DOS — carried from '+fmtD(prevKeys[0]):'First DOS today'):'DOS already exists for today',
+        ]),
+      ]),
+    ]));
+
+    // CPT dropdown
+    var cptSel=h('select',{cls:'cpt-select',style:{marginBottom:'8px'}});
+    cptSel.appendChild(h('option',{value:''},[dc.cpt&&dc.cpt.length?'+ Change/add CPT':'— Select CPT code —']));
+    CPTS.forEach(function(item){
+      if(item.g){cptSel.appendChild(h('optgroup',{label:item.g},[]));return;}
+      var already=!!(dc.cpt||[]).find(function(x){return x.code===item.code;});
+      if(!already)cptSel.appendChild(h('option',{value:item.code},[item.code+' — '+item.desc]));
+    });
+    cptSel.addEventListener('change',function(){
+      var code=cptSel.value;if(!code)return;
+      var item=CPTS.find(function(x){return x.code===code;});if(!item)return;
+      if(!dc.cpt)dc.cpt=[];
+      dc.cpt.push({code:item.code,desc:item.desc,mod:''});
+      dc._carried=false;
+      cptSel.value='';
+      // re-render chips
+      refreshQRCard(pt.id,d,dc,chipRow,icdRow);
+    });
+    card.appendChild(cptSel);
+
+    // CPT chips (current selection)
+    var chipRow=h('div',{style:{display:'flex',flexWrap:'wrap',gap:'5px',marginBottom:'8px'}},[]);
+    var buildChips=function(){
+      chipRow.innerHTML='';
+      if(!dc.cpt||!dc.cpt.length){
+        chipRow.appendChild(document.createTextNode('No CPT selected'));
+        chipRow.style.color='var(--tx3)';chipRow.style.fontSize='12px';
+      } else {
+        chipRow.style.color='';chipRow.style.fontSize='';
+        dc.cpt.forEach(function(c){
+          var chip=document.createElement('span');
+          chip.className='pill green';chip.style.display='inline-flex';chip.style.alignItems='center';chip.style.gap='4px';
+          chip.innerHTML='<span style="font-weight:800">'+c.code+'</span>'
+            +'<span style="font-size:10px;font-weight:400;opacity:.8"> '+c.desc+'</span>'
+            +'<span style="cursor:pointer;font-size:14px;margin-left:2px;opacity:.6" class="px">×</span>';
+          chip.querySelector('.px').addEventListener('click',function(){
+            dc.cpt=dc.cpt.filter(function(x){return x.code!==c.code;});
+            buildChips();
+          });
+          chipRow.appendChild(chip);
+        });
+      }
+    };
+    buildChips();
+    card.appendChild(chipRow);
+
+    // ICD section
+    var icdLabel=h('div',{style:{fontSize:'11px',fontWeight:'700',color:'var(--tx2)',marginBottom:'5px',textTransform:'uppercase',letterSpacing:'.05em'}},['Diagnoses']);
+    card.appendChild(icdLabel);
+
+    // ICD pills
+    var icdRow=h('div',{style:{display:'flex',flexWrap:'wrap',gap:'4px',marginBottom:'6px'}},[]);
+    var buildICDPills=function(){
+      icdRow.innerHTML='';
+      if(!dc.icd||!dc.icd.length){
+        var none=document.createTextNode('None');icdRow.appendChild(none);
+        icdRow.style.color='var(--tx3)';icdRow.style.fontSize='12px';
+      } else {
+        icdRow.style.color='';icdRow.style.fontSize='';
+        dc.icd.forEach(function(c){
+          var chip=document.createElement('span');
+          chip.className='pill purple';chip.style.display='inline-flex';chip.style.alignItems='center';chip.style.gap='3px';
+          chip.innerHTML='<span style="font-weight:700">'+c.code+'</span>'
+            +'<span style="font-size:9px;font-weight:400;opacity:.75"> '+c.desc+'</span>'
+            +'<span style="cursor:pointer;font-size:13px;margin-left:2px;opacity:.6" class="px">×</span>';
+          chip.querySelector('.px').addEventListener('click',function(){
+            dc.icd=dc.icd.filter(function(x){return x.code!==c.code;});
+            buildICDPills();
+          });
+          icdRow.appendChild(chip);
+        });
+      }
+    };
+    buildICDPills();
+    card.appendChild(icdRow);
+
+    // ICD category dropdown
+    var icdSel=h('select',{cls:'sel',style:{marginBottom:'10px',fontSize:'12px'}});
+    icdSel.appendChild(h('option',{value:''},[' + Add diagnosis…']));
+    Object.keys(ICD_CATS).forEach(function(cat){
+      icdSel.appendChild(h('optgroup',{label:cat},[]));
+      ICD_CATS[cat].forEach(function(pair){
+        var already=!!(dc.icd||[]).find(function(x){return x.code===pair[0];});
+        if(!already){
+          var o=document.createElement('option');
+          o.value=pair[0];o.text=pair[0]+' — '+pair[1];
+          icdSel.appendChild(o);
+        }
+      });
+    });
+    icdSel.addEventListener('change',function(){
+      var code=icdSel.value;if(!code)return;
+      // find in flat list
+      var pair=ICDS_FLAT.find(function(p){return p[0]===code;});
+      if(!pair)return;
+      if(!dc.icd)dc.icd=[];
+      if(!dc.icd.find(function(x){return x.code===code;})){
+        dc.icd.push({code:code,desc:pair[1],custom:false});
+        dc._icdCarried=false;
+        buildICDPills();
+      }
+      icdSel.value='';
+    });
+    card.appendChild(icdSel);
+
+    // Action buttons — Save and Mark Discharged
+    var markDone=function(msg,color){
+      card.style.opacity='0.5';
+      card.style.pointerEvents='none';
+      var savedMsg=document.createElement('div');
+      savedMsg.style.cssText='font-size:13px;font-weight:700;color:'+color+';text-align:center;padding:6px 0';
+      savedMsg.textContent=msg;
+      card.appendChild(savedMsg);
+    };
+
+    card.appendChild(h('div',{style:{display:'flex',gap:'8px',marginTop:'4px'}},[
+      h('button',{cls:'btn green',style:{flex:'1',padding:'11px'},'@click':function(){
+        var p2=getPt(pt.id);
+        if(!p2.charges)p2.charges={};
+        p2.charges[d]=dc;
+        save();
+        markDone('✓ Saved for '+fmtD(d),'var(--green)');
+      }},['✓ Save']),
+      h('button',{cls:'btn amber',style:{flex:'1',padding:'11px'},'@click':function(){
+        var p2=getPt(pt.id);
+        if(!p2.charges)p2.charges={};
+        p2.charges[d]=dc;
+        p2.status='discharged';
+        save();
+        markDone('○ Discharged','var(--amber)');
+      }},['○ Discharge']),
+    ]));
+
+    f.appendChild(card);
+  });
+
+  // Done all button
+  f.appendChild(h('button',{cls:'btn blue block',style:{marginTop:'4px'},'@click':function(){
+    QUICK_ROUND=false;render();
+  }},['← Back to census']));
+
+  return h('div',{},[f]);
+}
+
+function refreshQRCard(){}  // placeholder — chips re-render in place
+
 // ── CENSUS ───────────────────────────────────────────────────────────────────
 function censusView(){
   var active=DB.patients.filter(function(p){return p.status==='active';});
@@ -473,8 +707,14 @@ function censusView(){
   var f=document.createDocumentFragment();
   f.appendChild(h('div',{cls:'btn-row',style:{marginBottom:'14px'}},[
     h('button',{cls:'btn blue','@click':function(){openAddModal();}},['+ Add patient']),
+    active.length?h('button',{cls:'btn green','@click':function(){QUICK_ROUND=true;render();}},['⚡ Quick round']):null,
     h('button',{cls:'btn sm','@click':function(){clearTimeout(TOAST_T);TOAST=null;MODAL='export';render();}},['💾 Export']),
-  ]));
+  ].filter(Boolean)));
+  // ── QUICK ROUND MODE ──
+  if(QUICK_ROUND&&active.length){
+    f.appendChild(quickRoundView(active));
+    return h('div',{},[f]);
+  }
   f.appendChild(h('div',{cls:'sec first'},['🟢 Active inpatients ('+active.length+')']));
   if(!active.length){
     f.appendChild(h('div',{cls:'empty',style:{padding:'24px 20px'}},[
@@ -492,7 +732,7 @@ function censusView(){
 }
 function ptCard(pt){
   var tm=TM[pt.type]||TM.followup,isActive=pt.status==='active';
-  var icdCount=(pt.icd||[]).length,dos=dosCount(pt),codes=totalCodes(pt);
+  var icdCount=Object.values(pt.charges||{}).reduce(function(a,dc){return a+(dc.icd||[]).length;},0),dos=dosCount(pt),codes=totalCodes(pt);
   return h('div',{cls:'card'},[
     h('div',{style:{display:'flex',alignItems:'center',gap:'12px',cursor:'pointer'},'@click':function(){openCharge(pt);}},[
       h('div',{cls:'av',style:{background:tm.bg,color:tm.fg}},[initials(pt.name)]),
@@ -507,19 +747,49 @@ function ptCard(pt){
           h('span',{cls:'badge',style:{background:isActive?'var(--green2)':'var(--amber2)',color:isActive?'var(--green)':'var(--amber)',border:'1px solid '+(isActive?'var(--green3)':'var(--amber3)')}},[isActive?'● Active':'○ Discharged']),
           icdCount?h('span',{cls:'badge',style:{background:'var(--purple2)',color:'var(--purple)',border:'1px solid var(--purple3)'}},[icdCount+' DX']):null,
           dos?h('span',{style:{fontSize:'12px',color:'var(--tx2)'}},[dos+' DOS · '+codes+' CPT']):h('span',{style:{fontSize:'12px',color:'var(--tx3)'}},['No charges yet']),
-          pt.facesheet?h('span',{style:{fontSize:'11px',color:'var(--purple)'}},['📎']):null,
         ]),
       ]),
       h('div',{style:{fontSize:'18px',color:'var(--tx3)'}},['>']),
     ]),
     h('div',{cls:'ptactions'},[
       h('button',{cls:'btn sm','@click':function(){openCharge(pt);}},[dos?'Edit charges':'Add charges']),
-      pt.facesheet?h('button',{cls:'btn sm purple','@click':function(){downloadFacesheet(pt);}},['📎 Facesheet']):null,
+      h('button',{cls:'btn sm','@click':function(){EDITING_PT=(EDITING_PT===pt.id?null:pt.id);render();}},['✏️ Edit']),
       isActive
         ?h('button',{cls:'btn sm amber','@click':function(){setPtStatus(pt.id,'discharged');}},[' Mark discharged'])
         :h('button',{cls:'btn sm teal','@click':function(){setPtStatus(pt.id,'active');}},[' Readmit']),
       h('button',{cls:'btn sm red','@click':function(){if(confirm('Remove '+pt.name+' from census? This will delete all their charges and cannot be undone.')){DB.patients=DB.patients.filter(function(p){return p.id!==pt.id;});save();render();}}},['🗑 Remove']),
     ]),
+    // inline edit form
+    EDITING_PT===pt.id?h('div',{style:{padding:'10px 0',borderTop:'1px solid var(--bd)',marginTop:'8px'}},[
+      h('div',{style:{fontSize:'12px',fontWeight:'700',color:'var(--tx2)',marginBottom:'8px'}},['Edit patient details']),
+      h('div',{style:{display:'flex',gap:'6px',marginBottom:'6px'}},[
+        h('input',{cls:'inp',id:'_eName_'+pt.id,type:'text',value:pt.name,placeholder:'Patient name',style:{flex:'2'}}),
+        h('input',{cls:'inp',id:'_eRoom_'+pt.id,type:'text',value:pt.room||'',placeholder:'Room',style:{flex:'1'}}),
+      ]),
+      h('div',{style:{display:'flex',gap:'6px',marginBottom:'8px'}},[
+        h('input',{cls:'inp',id:'_eAge_'+pt.id,type:'text',inputmode:'numeric',value:pt.age||'',placeholder:'Age',maxlength:'3',style:{flex:'1'}}),
+        h('select',{cls:'sel',id:'_eType_'+pt.id,style:{flex:'2'}},
+          Object.keys(TM).map(function(k){var o=h('option',{value:k},[TM[k].label]);if(k===pt.type)o.selected=true;return o;})),
+      ]),
+      h('div',{style:{display:'flex',gap:'6px'}},[
+        h('button',{cls:'btn blue sm','@click':function(){
+          var nameEl=document.getElementById('_eName_'+pt.id);
+          var newName=(nameEl?nameEl.value:'').trim();
+          if(!newName){if(nameEl)nameEl.style.borderColor='red';return;}
+          var p2=getPt(pt.id);
+          if(!p2)return;
+          p2.name=(nameEl?nameEl.value:p2.name).trim();
+          var roomEl=document.getElementById('_eRoom_'+pt.id);
+          if(roomEl)p2.room=roomEl.value.trim();
+          var ageEl=document.getElementById('_eAge_'+pt.id);
+          if(ageEl)p2.age=ageEl.value.trim();
+          var typeEl=document.getElementById('_eType_'+pt.id);
+          if(typeEl)p2.type=typeEl.value;
+          save();EDITING_PT=null;flash('Patient updated');render();
+        }},['Save']),
+        h('button',{cls:'btn sm','@click':function(){EDITING_PT=null;render();}},['Cancel']),
+      ]),
+    ]):null,
   ]);
 }
 
@@ -568,33 +838,6 @@ function chargeView(){
     }},['🗑 Remove patient from census']),
   ]));
 
-  // ── PATIENT-LEVEL ICD PANEL ──
-  f.appendChild(mkIcdPanel(pt));
-
-  // ── FACESHEET ──
-  f.appendChild(h('div',{cls:'sec'},['Facesheet']));
-  if(pt.facesheet){
-    f.appendChild(h('div',{cls:'fs-preview'},[
-      h('img',{src:pt.facesheet},[]),
-      h('button',{cls:'fs-remove','@click':function(){var p2=getPt(pt.id);if(p2){p2.facesheet=null;save();}render();}},[' ✕ Remove']),
-    ]));
-    f.appendChild(h('div',{style:{marginTop:'8px',marginBottom:'4px'}},[
-      h('button',{cls:'btn sm purple','@click':function(){downloadFacesheet(selPt());}},['📎 Download facesheet to attach to email']),
-    ]));
-  } else {
-    var uzIn=h('input',{type:'file',accept:'image/*,application/pdf,image/heic,image/heif'});
-    var uz=h('div',{cls:'upload-zone'},[uzIn,
-      h('div',{cls:'upload-icon'},['📄']),
-      h('div',{cls:'upload-title'},['Upload facesheet']),
-      h('div',{cls:'upload-sub'},['Tap to choose — photo, PNG, JPEG, PDF']),
-    ]);
-    uz.addEventListener('click',function(e){if(e.target!==uzIn)uzIn.click();});
-    uz.addEventListener('dragover',function(e){e.preventDefault();uz.classList.add('drag-over');});
-    uz.addEventListener('dragleave',function(){uz.classList.remove('drag-over');});
-    uz.addEventListener('drop',function(e){e.preventDefault();uz.classList.remove('drag-over');var f2=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];if(f2)readFS(f2,pt.id);});
-    uzIn.addEventListener('change',function(){if(uzIn.files&&uzIn.files[0])readFS(uzIn.files[0],pt.id);});
-    f.appendChild(uz);
-  }
 
   // ── DATES OF SERVICE ──
   f.appendChild(h('div',{cls:'sec'},['Dates of service (CPT only — diagnoses shared above)']));
@@ -651,7 +894,15 @@ function chargeView(){
       var added=0;
       dates.forEach(function(d){
         if(!p2.charges[d]){
-          p2.charges[d]={cpt:JSON.parse(JSON.stringify(prevCPT)),notes:'',_carried:prevCPT.length>0};
+          // carry ICD from previous DOS too
+        var prevICD=[];
+        if(prevKeys.length){
+          var prevDCicd=p2.charges[prevKeys[0]];
+          if(prevDCicd&&prevDCicd.icd&&prevDCicd.icd.length){
+            prevICD=JSON.parse(JSON.stringify(prevDCicd.icd));
+          }
+        }
+        p2.charges[d]={cpt:JSON.parse(JSON.stringify(prevCPT)),icd:prevICD,notes:'',_carried:prevCPT.length>0,_icdCarried:prevICD.length>0};
           added++;
         }
       });
@@ -753,23 +1004,32 @@ function mkIcdPanel(pt){
     });
     f.appendChild(sbox);
   } else {
-    // 4-column category grid
-    var grid=h('div',{cls:'icd-grid'},[]);
+    // Category dropdowns — one per category
     Object.keys(ICD_CATS).forEach(function(cat){
-      var col=h('div',{cls:'icd-col'},[]);
-      col.appendChild(h('div',{cls:'icd-col-head'},[cat]));
-      ICD_CATS[cat].forEach(function(pair){
+      var catCodes=ICD_CATS[cat];
+      var selEl=h('select',{cls:'sel',style:{marginBottom:'8px'}});
+      // default option
+      var def=h('option',{value:''},[cat+' — select a code…']);
+      selEl.appendChild(def);
+      catCodes.forEach(function(pair){
         var code=pair[0],desc=pair[1];
-        var sel=!!(pt.icd||[]).find(function(x){return x.code===code;});
-        col.appendChild(h('div',{cls:'icd-item'+(sel?' on':''),'@click':function(){togglePtICD(pt.id,code,desc,false);}},[
-          h('span',{cls:'icd-code'},[code]),
-          h('span',{cls:'icd-desc'},[desc]),
-          h('div',{cls:'icd-chk'},[sel?'✓':'']),
-        ]));
+        var already=!!(pt.icd||[]).find(function(x){return x.code===code;});
+        var o=h('option',{value:code},[code+' — '+desc+(already?' ✓':'')]);
+        if(already)o.style.color='var(--green)';
+        selEl.appendChild(o);
       });
-      grid.appendChild(col);
+      selEl.addEventListener('change',function(){
+        var code=selEl.value;
+        if(!code)return;
+        var pair=catCodes.find(function(p){return p[0]===code;});
+        if(!pair)return;
+        if(!(pt.icd||[]).find(function(x){return x.code===code;})){
+          togglePtICD(pt.id,code,pair[1],false);
+        }
+        selEl.value='';
+      });
+      f.appendChild(selEl);
     });
-    f.appendChild(grid);
   }
 
   // custom ICD
@@ -794,21 +1054,81 @@ function mkIcdPanel(pt){
 function dosEditor(pt,d,dc){
   var f=document.createDocumentFragment();
 
-  // show which ICD codes are shared from patient
-  var icd=pt.icd||[];
-  if(icd.length){
-    var ipills=h('div',{cls:'pills',style:{marginBottom:'12px'}},[]);
-    icd.forEach(function(c){
-      ipills.appendChild(h('span',{cls:'pill gdash'},[c.code,' ',h('span',{style:{fontWeight:'400',fontSize:'10px',fontFamily:'sans-serif',opacity:'.75'}},[c.desc])]));
-    });
-    f.appendChild(h('div',{style:{background:'var(--purple2)',border:'1px solid var(--purple3)',borderRadius:'var(--rs)',padding:'10px 12px',marginBottom:'12px'}},[
-      h('div',{style:{fontSize:'12px',fontWeight:'700',color:'var(--purple)',marginBottom:'6px'}},['📋 Shared diagnoses (from patient)']),
-      ipills,
-    ]));
+  // ── ICD-10 for this date of service ──
+  f.appendChild(h('div',{cls:'sec',style:{marginTop:'0'}},['Diagnoses for '+fmtD(d)]));
+
+  // Selected ICD pills with remove
+  var dosIcd=dc.icd||[];
+  if(dosIcd.length){
+    var icdPills=h('div',{style:{background:'var(--purple2)',border:'1px solid var(--purple3)',borderRadius:'var(--rs)',padding:'10px 12px',marginBottom:'10px'}},[
+      h('div',{style:{fontSize:'11px',fontWeight:'700',color:'var(--purple)',marginBottom:'7px',textTransform:'uppercase',letterSpacing:'.05em'}},[
+        dc._icdCarried?'↩ Diagnoses carried from previous date — change if needed':'✓ Diagnoses for this date',
+      ]),
+      h('div',{style:{display:'flex',flexWrap:'wrap',gap:'5px'}},
+        dosIcd.map(function(c){
+          return h('span',{cls:'pill purple',style:{display:'inline-flex',alignItems:'center',gap:'4px'}},[
+            c.code,
+            h('span',{style:{fontWeight:'400',fontSize:'10px',fontFamily:'sans-serif',marginLeft:'2px',opacity:'.8'}},[c.desc]),
+            h('span',{cls:'px','@click':function(){toggleDOSICD(pt.id,d,c.code,c.desc,c.custom);}},['×']),
+          ]);
+        })
+      ),
+    ]);
+    f.appendChild(icdPills);
   } else {
-    f.appendChild(h('div',{style:{background:'var(--amber2)',border:'1px solid var(--amber3)',borderRadius:'var(--rs)',padding:'9px 12px',marginBottom:'12px',fontSize:'13px',color:'var(--amber)'}},
-      ['⚠ No diagnoses set yet — scroll up to add diagnoses to this patient.']));
+    f.appendChild(h('div',{style:{background:'var(--bg2)',border:'1px dashed var(--bd2)',borderRadius:'var(--rs)',padding:'8px 12px',marginBottom:'10px',fontSize:'13px',color:'var(--tx3)',textAlign:'center'}},
+      ['No diagnoses yet — select from dropdowns below']));
   }
+
+  // ICD category dropdowns
+  Object.keys(ICD_CATS).forEach(function(cat){
+    var catCodes=ICD_CATS[cat];
+    var icdSel=h('select',{cls:'sel',style:{marginBottom:'6px'}});
+    icdSel.appendChild(h('option',{value:''},[cat+' — select a code…']));
+    catCodes.forEach(function(pair){
+      var already=!!(dc.icd||[]).find(function(x){return x.code===pair[0];});
+      var o=h('option',{value:pair[0]},[pair[0]+' — '+pair[1]+(already?' ✓':'')]);
+      if(already)o.style.color='var(--green)';
+      icdSel.appendChild(o);
+    });
+    icdSel.addEventListener('change',function(){
+      var code=icdSel.value;
+      if(!code)return;
+      var pair=catCodes.find(function(p){return p[0]===code;});
+      if(!pair)return;
+      if(!dc.icd)dc.icd=[];
+      if(!dc.icd.find(function(x){return x.code===code;})){
+        dc.icd.push({code:code,desc:pair[1],custom:false});
+        dc._icdCarried=false;
+        saveDOS(pt.id,d,dc);
+      }
+      icdSel.value='';
+      render();
+    });
+    f.appendChild(icdSel);
+  });
+
+  // Custom ICD for this DOS
+  f.appendChild(h('div',{cls:'custom-icd',style:{marginBottom:'12px'}},[
+    h('div',{style:{fontSize:'12px',fontWeight:'700',color:'var(--tx2)',marginBottom:'7px'}},['+ Custom diagnosis for this date']),
+    h('div',{style:{display:'flex',gap:'7px',marginBottom:'6px'}},[
+      h('input',{cls:'inp',id:'_dosCode_'+d,type:'text',placeholder:'Code',style:{width:'100px',flexShrink:'0',fontFamily:'monospace',textTransform:'uppercase'}}),
+      h('input',{cls:'inp',id:'_dosDesc_'+d,type:'text',placeholder:'Description',style:{flex:'1'}}),
+    ]),
+    h('button',{cls:'btn blue sm','@click':function(){
+      var cEl=document.getElementById('_dosCode_'+d);
+      var dEl=document.getElementById('_dosDesc_'+d);
+      var code=(cEl?cEl.value:'').trim().toUpperCase();
+      var desc=(dEl?dEl.value:'').trim();
+      if(!code||!desc){flash('Enter code and description','amber');return;}
+      if(!dc.icd)dc.icd=[];
+      if(dc.icd.find(function(x){return x.code===code;})){flash('Already added','amber');return;}
+      dc.icd.push({code:code,desc:desc,custom:true});
+      saveDOS(pt.id,d,dc);
+      if(cEl)cEl.value='';if(dEl)dEl.value='';
+      render();
+    }},['Add']),
+  ]));
 
   // CPT codes — dropdown
   f.appendChild(h('div',{cls:'sec',style:{marginTop:'0'}},['CPT codes for '+fmtD(d)]));
@@ -903,12 +1223,6 @@ function dosEditor(pt,d,dc){
   }
 
 
-  // notes
-  f.appendChild(h('div',{cls:'sec'},['Notes for biller']));
-  var nta=h('textarea',{cls:'inp',style:{marginBottom:'14px'},placeholder:'Optional notes for this date...'});
-  nta.value=dc.notes||'';
-  nta.addEventListener('input',function(){dc.notes=nta.value;saveDOS(pt.id,d,dc);});
-  f.appendChild(nta);
   f.appendChild(h('button',{cls:'btn green block','@click':function(){
     dc._carried=false; // clear the carried-over indicator once user saves
     flash('Charges saved for '+fmtD(d));
@@ -980,8 +1294,8 @@ function summaryView(){
         (dc.cpt||[]).length?h('div',{cls:'pills'},(dc.cpt||[]).map(function(c){return h('span',{cls:'pill blue'},[c.code+(c.mod?'-'+c.mod:''),' ',h('span',{style:{fontWeight:'400',fontSize:'10px',fontFamily:'sans-serif',opacity:'.8'}},[c.desc])]);})):
           h('div',{style:{fontSize:'12px',color:'var(--tx3)',marginBottom:'4px'}},['No CPT codes']),
         // shared ICD pills
-        (pt.icd||[]).length?h('div',{cls:'pills',style:{marginTop:'4px'}},(pt.icd||[]).map(function(c){return h('span',{cls:'pill gdash'},[c.code]);})):null,
-        dc.notes?h('div',{style:{fontSize:'12px',color:'var(--tx2)',marginTop:'4px'}},[dc.notes]):null,
+        (dc.icd||pt.icd||[]).length?h('div',{cls:'pills',style:{marginTop:'4px'}},(dc.icd||pt.icd||[]).map(function(c){return h('span',{cls:'pill gdash'},[c.code]);})):null,
+
       ]));
     });
     f.appendChild(h('div',{cls:'card'},kids));
@@ -1141,32 +1455,6 @@ function mkModal(){
   if(MODAL==='email'){
     sh.appendChild(h('div',{cls:'modal-title'},['Send charges to biller']));
 
-    // facesheet section for new/consult patients
-    var fsPatients=DB.patients.filter(function(pt){
-      return pt.facesheet&&(pt.type==='new'||pt.type==='consult');
-    });
-    var fsChecked={};
-    fsPatients.forEach(function(pt){fsChecked[pt.id]=true;});
-
-    if(fsPatients.length){
-      sh.appendChild(h('div',{style:{background:'var(--purple2)',border:'1px solid var(--purple3)',borderRadius:'var(--rs)',padding:'12px',marginBottom:'14px'}},[
-        h('div',{style:{fontSize:'13px',fontWeight:'700',color:'var(--purple)',marginBottom:'6px'}},['📎 New/consult patient facesheets']),
-        h('div',{style:{fontSize:'12px',color:'var(--purple)',marginBottom:'10px',lineHeight:'1.5'}},['Check the patients whose facesheets you want downloaded to attach to your Zoho Mail email.']),
-        h('div',{style:{display:'flex',flexDirection:'column',gap:'7px'}},
-          fsPatients.map(function(pt){
-            var tm=TM[pt.type]||TM.followup;
-            var cb=h('input',{type:'checkbox',style:{width:'16px',height:'16px',accentColor:'var(--purple)',flexShrink:'0',cursor:'pointer'}});
-            cb.checked=true;
-            cb.addEventListener('change',function(){fsChecked[pt.id]=cb.checked;});
-            return h('label',{style:{display:'flex',alignItems:'center',gap:'9px',cursor:'pointer',padding:'7px 10px',background:'var(--bg)',borderRadius:'var(--rs)',border:'1px solid var(--purple3)'}},[
-              cb,
-              h('span',{cls:'badge',style:{background:tm.bg,color:tm.fg,flexShrink:'0'}},[tm.label]),
-              h('span',{style:{fontSize:'13px',fontWeight:'600',flex:'1'}},[pt.name+(pt.room?' · Rm '+pt.room:'')]),
-            ]);
-          })
-        ),
-      ]));
-    }
 
     // how-to tip
     sh.appendChild(h('div',{style:{background:'var(--blue2)',border:'1px solid var(--blue3)',borderRadius:'var(--rs)',padding:'11px 13px',marginBottom:'14px',fontSize:'13px',color:'var(--blue)',lineHeight:'1.6'}},[
@@ -1180,31 +1468,11 @@ function mkModal(){
       h('p',{style:{marginTop:'8px',fontSize:'12px',opacity:'.8'}},['If Zoho Mail isn\'t in the share sheet, use "📋 Copy" and paste into a new Zoho Mail email.']),
     ]));
 
-    sh.appendChild(h('div',{style:{display:'flex',flexDirection:'column',gap:'9px'}},[ 
-      // Download facesheets button (if any)
-      fsPatients.length?h('button',{cls:'btn purple block','@click':function(){
-        var ids=fsPatients.filter(function(pt){return fsChecked[pt.id];}).map(function(pt){return pt.id;});
-        if(!ids.length){flash('No facesheets selected','amber');return;}
-        ids.forEach(function(id,i){setTimeout(function(){var pt=getPt(id);if(pt)downloadFacesheet(pt);},i*700);});
-        flash('Downloading '+ids.length+' facesheet'+(ids.length!==1?'s':'')+'…','blue');
-      }},['📎 Download facesheet'+(fsPatients.length>1?'s ('+fsPatients.length+')':'')]):null,
-
-      // Share via share sheet (Web Share API)
-      h('button',{cls:'btn blue block','@click':function(){
-        var ids=fsPatients.filter(function(pt){return fsChecked[pt.id];}).map(function(pt){return pt.id;});
-        MODAL=null;render();
-        shareCharges(ids);
-      }},['📤 Share  →  open in Zoho Mail']),
-
-      // Copy to clipboard fallback
-      h('button',{cls:'btn block','@click':function(){
-        var ids=fsPatients.filter(function(pt){return fsChecked[pt.id];}).map(function(pt){return pt.id;});
-        MODAL=null;render();
-        copyCharges(ids);
-      }},['📋 Copy charges to clipboard']),
-
-      h('button',{cls:'btn sm','style':'margin-top:4px','@click':function(){MODAL=null;render();}},['Cancel']),
-    ].filter(Boolean)));
+    sh.appendChild(h('div',{style:{display:'flex',flexDirection:'column',gap:'9px'}},[
+      h('button',{cls:'btn blue block','@click':function(){MODAL=null;render();shareCharges([]);}},['📤 Share  →  open in Zoho Mail']),
+      h('button',{cls:'btn block','@click':function(){MODAL=null;render();copyCharges([]);}},['📋 Copy charges to clipboard']),
+      h('button',{cls:'btn sm','@click':function(){MODAL=null;render();}},['Cancel']),
+    ]));
   }
 
   if(MODAL==='settings'){
@@ -1386,6 +1654,19 @@ function addCustomPtICD(ptId){
 }
 
 // DOS CPT
+
+function toggleDOSICD(ptId,d,code,desc,custom){
+  var pt=getPt(ptId);if(!pt)return;
+  if(!pt.charges)pt.charges={};
+  if(!pt.charges[d])pt.charges[d]={cpt:[],icd:[],notes:''};
+  var dc=pt.charges[d];
+  if(!dc.icd)dc.icd=[];
+  var i=dc.icd.findIndex(function(x){return x.code===code;});
+  if(i>=0)dc.icd.splice(i,1);else dc.icd.push({code:code,desc:desc,custom:!!custom});
+  dc._icdCarried=false;
+  save();render();
+}
+
 function toggleDOSCPT(ptId,d,code,desc){
   var pt=getPt(ptId);if(!pt)return;
   if(!pt.charges)pt.charges={};
@@ -1475,13 +1756,13 @@ function buildChargeText(fsIds){
       } else {
         lines.push('CPT     : (none)');
       }
-      // ICD-10 — shared from patient
-      if((pt.icd||[]).length){
-        lines.push('ICD-10  : '+(pt.icd||[]).map(function(c){return c.code+' — '+c.desc;}).join('\n          '));
+      var btIcd=dc.icd||pt.icd||[];
+      if(btIcd.length){
+        lines.push('ICD-10  : '+btIcd.map(function(c){return c.code+' — '+c.desc;}).join('\n          '));
       } else {
         lines.push('ICD-10  : (none)');
       }
-      if(dc.notes) lines.push('Notes   : '+dc.notes);
+
       lines.push('───────────────────────────────');
     });
     lines.push('');
@@ -1585,10 +1866,11 @@ function shareDayCharges(d){
     } else {
       lines.push('CPT     : (none)');
     }
-    if((pt.icd||[]).length){
-      lines.push('ICD-10  : '+(pt.icd||[]).map(function(c){return c.code+' — '+c.desc;}).join('\n          '));
+    var dayIcd=dc.icd||pt.icd||[];
+    if(dayIcd.length){
+      lines.push('ICD-10  : '+dayIcd.map(function(c){return c.code+' — '+c.desc;}).join('\n          '));
     }
-    if(dc.notes) lines.push('Notes   : '+dc.notes);
+
     lines.push('───────────────────────────────');
   });
 
@@ -1607,20 +1889,19 @@ function shareDayCharges(d){
 }
 
 function exportDayCSV(d){
-  var hdr=['Patient','Age','Room','DOB','Admit','Status','Visit Type','Date of Service','CPT Code','CPT Description','Modifier','ICD-10 Codes','Notes'];
+  var hdr=['Patient','Age','Room','DOB','Admit','Status','Visit Type','Date of Service','CPT Code','CPT Description','Modifier','ICD-10 Codes'];
   var rows=[hdr];
   DB.patients.forEach(function(pt){
     var dc=pt.charges&&pt.charges[d];
     if(!dc)return;
-    var icdStr=(pt.icd||[]).map(function(c){return c.code;}).join('; ');
-    var icdDesc=(pt.icd||[]).map(function(c){return c.code+' '+c.desc;}).join('; ');
+    var icdStr=(dc.icd||pt.icd||[]).map(function(c){return c.code+' '+c.desc;}).join('; ');
     if(!(dc.cpt||[]).length){
       rows.push([pt.name,pt.age||'',pt.room||'',pt.dob||'',pt.admitDate||'',pt.status,
-        TM[pt.type]?TM[pt.type].label:pt.type,d,'','','',icdStr,dc.notes||'']);
+        TM[pt.type]?TM[pt.type].label:pt.type,d,'','','',icdStr]);
     } else {
       dc.cpt.forEach(function(c){
         rows.push([pt.name,pt.age||'',pt.room||'',pt.dob||'',pt.admitDate||'',pt.status,
-          TM[pt.type]?TM[pt.type].label:pt.type,d,c.code,c.desc,c.mod||'',icdStr,dc.notes||'']);
+          TM[pt.type]?TM[pt.type].label:pt.type,d,c.code,c.desc,c.mod||'',icdStr]);
       });
     }
   });
@@ -1634,15 +1915,16 @@ function exportCSV(){
   var rows=[hdr];
   DB.patients.forEach(function(pt){
     var dosKeys=Object.keys(pt.charges||{}).sort();
-    var icdStr=(pt.icd||[]).map(function(c){return c.code;}).join('; ');
+    // icdStr built per-DOS below
     if(!dosKeys.length){
-      rows.push([pt.name,pt.age||'',pt.room||'',pt.dob||'',pt.admitDate||'',pt.status,TM[pt.type]?TM[pt.type].label:pt.type,'','','',icdStr,'']);
+      rows.push([pt.name,pt.age||'',pt.room||'',pt.dob||'',pt.admitDate||'',pt.status,TM[pt.type]?TM[pt.type].label:pt.type,'','','','']);
     } else {
       dosKeys.forEach(function(d){
         var dc=pt.charges[d];
         (dc.cpt||[{code:'',desc:'',mod:''}]).forEach(function(c){
+          var icdStr=(dc.icd||pt.icd||[]).map(function(c){return c.code;}).join('; ');
           rows.push([pt.name,pt.age||'',pt.room||'',pt.dob||'',pt.admitDate||'',pt.status,
-            TM[pt.type]?TM[pt.type].label:pt.type,d,c.code,c.mod||'',icdStr,dc.notes||'']);
+            TM[pt.type]?TM[pt.type].label:pt.type,d,c.code,c.mod||'',icdStr]);
         });
       });
     }
