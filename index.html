@@ -367,7 +367,8 @@ var V='census';
 var MODAL=null;
 var MODAL_SYNC_METHOD='zoho';
 var EDITING_PT=null; // patient id being edited inline
-var QUICK_ROUND=false; // quick round mode // which sync method tab is shown
+var QUICK_ROUND=false; // quick round mode
+var CENSUS_Q=''; // census search query // which sync method tab is shown
 var TOAST=null,TOAST_T=null;
 var PID=null;
 var EDOS=null;
@@ -702,32 +703,71 @@ function refreshQRCard(){}  // placeholder — chips re-render in place
 
 // ── CENSUS ───────────────────────────────────────────────────────────────────
 function censusView(){
-  var active=DB.patients.filter(function(p){return p.status==='active';});
-  var disc=DB.patients.filter(function(p){return p.status==='discharged';});
+  var allActive=DB.patients.filter(function(p){return p.status==='active';});
+  var allDisc  =DB.patients.filter(function(p){return p.status==='discharged';});
   var f=document.createDocumentFragment();
-  f.appendChild(h('div',{cls:'btn-row',style:{marginBottom:'14px'}},[
+
+  f.appendChild(h('div',{cls:'btn-row',style:{marginBottom:'10px'}},[
     h('button',{cls:'btn blue','@click':function(){openAddModal();}},['+ Add patient']),
-    active.length?h('button',{cls:'btn green','@click':function(){QUICK_ROUND=true;render();}},['⚡ Quick round']):null,
+    allActive.length?h('button',{cls:'btn green','@click':function(){QUICK_ROUND=true;render();}},['⚡ Quick round']):null,
     h('button',{cls:'btn sm','@click':function(){clearTimeout(TOAST_T);TOAST=null;MODAL='export';render();}},['💾 Export']),
   ].filter(Boolean)));
+
+  // ── SEARCH BAR ──
+  var srch=h('input',{cls:'inp',type:'text',placeholder:'🔍 Search patients (3+ letters)…',value:CENSUS_Q,
+    style:{marginBottom:'12px'},
+    '@input':function(e){CENSUS_Q=e.target.value;render();}
+  });
+  f.appendChild(srch);
+
   // ── QUICK ROUND MODE ──
-  if(QUICK_ROUND&&active.length){
-    f.appendChild(quickRoundView(active));
+  if(QUICK_ROUND&&allActive.length){
+    f.appendChild(quickRoundView(allActive));
     return h('div',{},[f]);
   }
-  f.appendChild(h('div',{cls:'sec first'},['🟢 Active inpatients ('+active.length+')']));
-  if(!active.length){
-    f.appendChild(h('div',{cls:'empty',style:{padding:'24px 20px'}},[
-      h('div',{style:{fontSize:'28px',marginBottom:'8px'}},['🏥']),
-      h('div',{style:{fontSize:'14px'}},['No active inpatients — tap + Add patient']),
+
+  // Filter by search query — only activate after 3 chars
+  var q=CENSUS_Q.trim().toLowerCase();
+  var searching=q.length>=3;
+  var active=searching?allActive.filter(function(p){
+    return p.name.toLowerCase().indexOf(q)>=0
+      ||(p.room||'').toLowerCase().indexOf(q)>=0
+      ||(p.age||'').toString().indexOf(q)>=0;
+  }):allActive;
+  var disc=searching?allDisc.filter(function(p){
+    return p.name.toLowerCase().indexOf(q)>=0
+      ||(p.room||'').toLowerCase().indexOf(q)>=0;
+  }):allDisc;
+
+  if(searching){
+    // Search results — show everything matching in one flat list
+    var total=active.length+disc.length;
+    f.appendChild(h('div',{cls:'sec first'},[
+      total+' result'+(total!==1?'s':'')+" matching '"+CENSUS_Q+"'"+'  ',
+      h('button',{style:{fontSize:'11px',color:'var(--blue)',background:'none',border:'none',cursor:'pointer',fontFamily:'inherit',fontWeight:'600'},'@click':function(){CENSUS_Q='';render();}},['Clear ×']),
     ]));
-  } else {active.forEach(function(pt){f.appendChild(ptCard(pt));});}
-  f.appendChild(h('div',{cls:'toggle-sec'},[
-    h('div',{cls:'sec',style:{margin:'0'}},['🟡 Discharged ('+disc.length+')']),
-    disc.length?h('button',{cls:'toggle-btn','@click':function(){SHOW_DISCHARGED=!SHOW_DISCHARGED;render();}},[SHOW_DISCHARGED?'Hide ▲':'Show ▼']):null,
-  ]));
-  if(SHOW_DISCHARGED&&disc.length){disc.forEach(function(pt){f.appendChild(ptCard(pt));});}
-  if(!disc.length)f.appendChild(h('div',{style:{fontSize:'13px',color:'var(--tx3)',marginBottom:'8px'}},['No discharged patients']));
+    if(!total){
+      f.appendChild(h('div',{style:{fontSize:'13px',color:'var(--tx3)',padding:'12px 0'}},['No patients match "'+CENSUS_Q+'"']));
+    }
+    active.forEach(function(pt){f.appendChild(ptCard(pt));});
+    disc.forEach(function(pt){f.appendChild(ptCard(pt));});
+  } else {
+    // Normal census view
+    f.appendChild(h('div',{cls:'sec first'},['🟢 Active inpatients ('+active.length+')']));
+    if(!active.length){
+      f.appendChild(h('div',{cls:'empty',style:{padding:'24px 20px'}},[
+        h('div',{style:{fontSize:'28px',marginBottom:'8px'}},['🏥']),
+        h('div',{style:{fontSize:'14px'}},['No active inpatients — tap + Add patient']),
+      ]));
+    } else {active.forEach(function(pt){f.appendChild(ptCard(pt));});}
+    f.appendChild(h('div',{cls:'toggle-sec'},[
+      h('div',{cls:'sec',style:{margin:'0'}},['🟡 Discharged ('+allDisc.length+')']),
+      allDisc.length?h('button',{cls:'toggle-btn','@click':function(){SHOW_DISCHARGED=!SHOW_DISCHARGED;render();}},[SHOW_DISCHARGED?'Hide ▲':'Show ▼']):null,
+    ]));
+    if(SHOW_DISCHARGED&&allDisc.length){allDisc.forEach(function(pt){f.appendChild(ptCard(pt));});}
+    if(!allDisc.length)f.appendChild(h('div',{style:{fontSize:'13px',color:'var(--tx3)',marginBottom:'8px'}},['No discharged patients']));
+  }
+
   return h('div',{},[f]);
 }
 function ptCard(pt){
