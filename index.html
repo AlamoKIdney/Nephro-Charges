@@ -1,0 +1,3702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Nephro Charges">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f766e">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="apple-touch-icon" sizes="512x512" href="./icon-512.png">
+<title>Nephro Charge Capture</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#fff;--bg2:#f4f6f9;--bg3:#e8ecf2;
+  --tx:#0f172a;--tx2:#64748b;--tx3:#94a3b8;
+  --bd:#e2e8f0;--bd2:#cbd5e1;
+  --blue:#2563eb;--blue2:#eff6ff;--blue3:#bfdbfe;
+  --green:#16a34a;--green2:#f0fdf4;--green3:#bbf7d0;
+  --amber:#b45309;--amber2:#fffbeb;--amber3:#fde68a;
+  --red:#dc2626;--red2:#fef2f2;--red3:#fecaca;
+  --purple:#7c3aed;--purple2:#f5f3ff;--purple3:#ddd6fe;
+  --teal:#0f766e;--teal2:#f0fdfa;--teal3:#99f6e4;
+  --r:12px;--rs:8px;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#1e293b;--bg2:#0f172a;--bg3:#334155;
+  --tx:#f1f5f9;--tx2:#94a3b8;--tx3:#64748b;
+  --bd:#334155;--bd2:#475569;
+  --blue:#60a5fa;--blue2:#1e3a5f;--blue3:#1e40af;
+  --green:#4ade80;--green2:#14532d;--green3:#166534;
+  --amber:#fbbf24;--amber2:#451a03;--amber3:#78350f;
+  --red:#f87171;--red2:#450a0a;--red3:#7f1d1d;
+  --purple:#a78bfa;--purple2:#2e1065;--purple3:#4c1d95;
+  --teal:#2dd4bf;--teal2:#042f2e;--teal3:#134e4a;
+}}
+html,body{min-height:100%;background:var(--bg2);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:15px;line-height:1.5}
+#app{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;background:var(--bg)}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--bg);border-bottom:1px solid var(--bd);position:sticky;top:0;z-index:20}
+.brand{font-size:15px;font-weight:700}.brand-sub{font-size:11px;color:var(--tx2);margin-top:1px}
+.tbar-right{display:flex;gap:7px;align-items:center}
+.icon-btn{width:34px;height:34px;border:none;border-radius:var(--rs);background:var(--bg2);color:var(--tx2);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.bottomnav{display:flex;border-top:1px solid var(--bd);background:var(--bg);position:sticky;bottom:0;z-index:20}
+.nb{flex:1;padding:11px 4px 9px;font-size:11px;font-weight:500;border:none;background:none;cursor:pointer;color:var(--tx3);display:flex;flex-direction:column;align-items:center;gap:3px;font-family:inherit}
+.nb.on{color:var(--blue)}.nb-icon{font-size:20px;line-height:1}
+.page{flex:1;padding:14px 16px;padding-bottom:90px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.sec{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--tx2);margin:18px 0 9px}
+.sec.first{margin-top:0}
+.card{background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);padding:14px;margin-bottom:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 16px;border-radius:var(--rs);font-size:14px;font-weight:500;cursor:pointer;border:1px solid var(--bd2);background:var(--bg);color:var(--tx);font-family:inherit;-webkit-appearance:none;transition:opacity .1s}
+.btn:active{opacity:.65}
+.btn.blue{background:var(--blue2);color:var(--blue);border-color:var(--blue3)}
+.btn.green{background:var(--green2);color:var(--green);border-color:var(--green3)}
+.btn.red{background:var(--red2);color:var(--red);border-color:var(--red3)}
+.btn.amber{background:var(--amber2);color:var(--amber);border-color:var(--amber3)}
+.btn.purple{background:var(--purple2);color:var(--purple);border-color:var(--purple3)}
+.btn.teal{background:var(--teal2);color:var(--teal);border-color:var(--teal3)}
+.btn.sm{padding:6px 12px;font-size:12px}.btn.xs{padding:4px 9px;font-size:11px;font-weight:600}
+.btn.block{width:100%;padding:13px}.btn:disabled{opacity:.35;cursor:default;pointer-events:none}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap}
+.field{margin-bottom:11px}.field label{display:block;font-size:12px;font-weight:600;color:var(--tx2);margin-bottom:5px}
+.inp{width:100%;padding:9px 12px;border:1px solid var(--bd2);border-radius:var(--rs);background:var(--bg);color:var(--tx);font-size:14px;font-family:inherit;-webkit-appearance:none}
+.inp:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+textarea.inp{resize:vertical;min-height:64px;line-height:1.5}
+.sel{width:100%;padding:9px 12px;border:1px solid var(--bd2);border-radius:var(--rs);background:var(--bg);color:var(--tx);font-size:14px;font-family:inherit;-webkit-appearance:none}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
+.pill{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;font-family:monospace}
+.pill.blue{background:var(--blue2);color:var(--blue);border:1px solid var(--blue3)}
+.pill.green{background:var(--green2);color:var(--green);border:1px solid var(--green3)}
+.pill.gdash{background:var(--green2);color:var(--green);border:1px dashed var(--green3)}
+.pill.purple{background:var(--purple2);color:var(--purple);border:1px solid var(--purple3)}
+.px{cursor:pointer;font-size:15px;line-height:1;opacity:.55}.px:active{opacity:1}
+.listbox{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;max-height:210px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.lrow{display:flex;align-items:center;gap:10px;padding:9px 10px;cursor:pointer;border-bottom:1px solid var(--bd)}
+.lrow:last-child{border-bottom:none}.lrow:active{background:var(--bg3)}.lrow.on{background:var(--blue2)}
+.lcode{font-size:12px;font-weight:700;font-family:monospace;min-width:56px;color:var(--blue)}
+.ldesc{font-size:13px;color:var(--tx2);flex:1;line-height:1.3}.lrow.on .ldesc{color:var(--blue)}
+.chk{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--bd2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:transparent}
+.lrow.on .chk{background:var(--blue);border-color:var(--blue);color:#fff}
+.cats{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:9px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.cats::-webkit-scrollbar{display:none}
+.ctab{padding:6px 13px;font-size:12px;font-weight:500;border:1px solid var(--bd);border-radius:20px;background:var(--bg);color:var(--tx2);cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:inherit}
+.ctab.on{background:var(--blue2);color:var(--blue);border-color:var(--blue3)}
+.modcard{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--rs);padding:10px 12px;margin-bottom:8px}
+.modrow{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
+.modsel{padding:5px 9px;font-size:12px;border:1px solid var(--bd2);border-radius:6px;background:var(--bg);color:var(--tx);font-family:inherit;flex:1;min-width:0;-webkit-appearance:none}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;display:flex;align-items:flex-end;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+.sheet{background:var(--bg);border-radius:20px 20px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom));width:100%;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.drag{width:40px;height:4px;background:var(--bd2);border-radius:2px;margin:0 auto 18px}
+.modal-title{font-size:18px;font-weight:700;margin-bottom:16px}
+.toast{padding:11px 14px;border-radius:var(--rs);margin-bottom:12px;font-size:13px;font-weight:600}
+.toast.green{background:var(--green2);color:var(--green);border:1px solid var(--green3)}
+.toast.blue{background:var(--blue2);color:var(--blue);border:1px solid var(--blue3)}
+.toast.amber{background:var(--amber2);color:var(--amber);border:1px solid var(--amber3)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.stat{background:var(--bg2);border-radius:var(--rs);padding:12px;text-align:center;border:1px solid var(--bd)}
+.stat-n{font-size:26px;font-weight:700}.stat-l{font-size:11px;color:var(--tx2);margin-top:2px}
+.av{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
+.pthdr{display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg2);border-radius:var(--r);border:1px solid var(--bd);margin-bottom:14px}
+.back{display:flex;align-items:center;gap:5px;font-size:14px;color:var(--tx2);background:none;border:none;cursor:pointer;padding:0;margin-bottom:14px;font-weight:500;font-family:inherit}
+.ptactions{display:flex;gap:7px;margin-top:11px;padding-top:10px;border-top:1px solid var(--bd);flex-wrap:wrap}
+/* status */
+.status-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:var(--rs);margin-bottom:14px;border:1px solid var(--bd)}
+.status-bar.active{background:var(--green2);border-color:var(--green3)}
+.status-bar.discharged{background:var(--amber2);border-color:var(--amber3)}
+.status-label{font-size:14px;font-weight:700}
+.status-bar.active .status-label{color:var(--green)}
+.status-bar.discharged .status-label{color:var(--amber)}
+.status-sub{font-size:12px;opacity:.8;margin-top:1px}
+/* ICD panel (patient-level) */
+.icd-panel{background:var(--purple2);border:1px solid var(--purple3);border-radius:var(--r);padding:13px;margin-bottom:14px}
+.icd-panel-title{font-size:13px;font-weight:700;color:var(--purple);margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.icd-panel-sub{font-size:12px;color:var(--purple);opacity:.8;margin-bottom:10px}
+/* DOS cards */
+.dos-card{border:1px solid var(--bd);border-radius:var(--r);margin-bottom:10px;overflow:hidden}
+.dos-header{display:flex;align-items:center;justify-content:space-between;padding:10px 13px;background:var(--bg2);cursor:pointer;border-bottom:1px solid var(--bd)}
+.dos-header:active{background:var(--bg3)}
+.dos-date{font-size:14px;font-weight:700;color:var(--tx)}
+.dos-summary{font-size:12px;color:var(--tx2);margin-top:2px}
+.dos-body{padding:13px}
+.dos-chevron{font-size:18px;color:var(--tx2);transition:transform .2s;display:inline-block}
+.dos-chevron.open{transform:rotate(180deg)}
+/* upload */
+.upload-zone{border:2px dashed var(--bd2);border-radius:var(--r);padding:18px;text-align:center;cursor:pointer;background:var(--bg2);transition:border-color .15s}
+.upload-zone:hover,.upload-zone.drag-over{border-color:var(--blue);background:var(--blue2)}
+.upload-zone input[type=file]{display:none}
+.upload-icon{font-size:32px;margin-bottom:6px}
+.upload-title{font-size:14px;font-weight:600;color:var(--tx);margin-bottom:3px}
+.upload-sub{font-size:12px;color:var(--tx2)}
+.fs-preview{border-radius:var(--r);border:1px solid var(--bd);overflow:hidden;margin-top:10px;position:relative}
+.fs-preview img{width:100%;display:block}
+.fs-remove{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.65);color:#fff;border:none;border-radius:20px;padding:4px 10px;font-size:12px;cursor:pointer;font-family:inherit}
+
+.custom-icd{background:var(--bg2);border:2px dashed var(--bd2);border-radius:var(--r);padding:13px;margin-top:10px}
+/* ICD 4-column category grid */
+.icd-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+.icd-col{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--rs);overflow:hidden}
+.icd-col-head{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:5px 8px;background:var(--bg3);border-bottom:1px solid var(--bd);color:var(--tx2)}
+.icd-item{display:flex;align-items:flex-start;gap:5px;padding:5px 7px;cursor:pointer;border-bottom:1px solid var(--bd)}
+.icd-item:last-child{border-bottom:none}
+.icd-item:active{background:var(--bg3)}.icd-item.on{background:var(--blue2)}
+.icd-code{font-size:10px;font-weight:700;font-family:monospace;color:var(--blue);flex-shrink:0;padding-top:1px;min-width:44px}
+.icd-desc{font-size:10px;color:var(--tx2);line-height:1.35;flex:1}
+.icd-item.on .icd-desc{color:var(--blue)}
+.icd-chk{width:13px;height:13px;border-radius:3px;border:1.5px solid var(--bd2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:transparent;margin-left:auto;margin-top:1px}
+.icd-item.on .icd-chk{background:var(--blue);border-color:var(--blue);color:#fff}
+/* CPT dropdown */
+.cpt-select{width:100%;padding:9px 12px;border:1px solid var(--bd2);border-radius:var(--rs);background:var(--bg);color:var(--tx);font-size:14px;font-family:inherit;-webkit-appearance:none;margin-bottom:8px}
+.empty{text-align:center;padding:48px 20px;color:var(--tx2)}
+.empty-icon{font-size:44px;margin-bottom:12px}
+.divider{height:1px;background:var(--bd);margin:16px 0}
+.pills{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px}
+.banner{font-size:12px;color:var(--tx2);background:var(--bg2);border-top:1px solid var(--bd);padding:8px 16px;text-align:center}
+.toggle-sec{display:flex;align-items:center;justify-content:space-between;margin:18px 0 9px}
+.toggle-sec .sec{margin:0}
+.toggle-btn{font-size:12px;color:var(--blue);background:none;border:none;cursor:pointer;font-family:inherit;font-weight:500}
+.dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;display:inline-block}
+.dot.active{background:var(--green)}.dot.discharged{background:var(--amber)}
+/* info box */
+.info-box{background:var(--blue2);border:1px solid var(--blue3);border-radius:var(--rs);padding:10px 13px;margin-bottom:12px;font-size:13px;color:var(--blue)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+'use strict';
+// ── STORAGE ──────────────────────────────────────────────────────────────────
+var MEM={},LS=false;
+try{localStorage.setItem('_t','1');localStorage.removeItem('_t');LS=true;}catch(e){}
+function sGet(k){try{return LS?localStorage.getItem(k):MEM[k]||null;}catch(e){return MEM[k]||null;}}
+function sSet(k,v){try{if(LS)localStorage.setItem(k,v);MEM[k]=v;}catch(e){MEM[k]=v;}}
+function sDel(k){try{if(LS)localStorage.removeItem(k);}catch(e){}delete MEM[k];}
+
+var SK='ncc_v6';
+var BK='ncc_lastbackup'; // stores timestamp of last backup
+function loadDB(){try{var r=sGet(SK);if(r)return JSON.parse(r);}catch(e){}return{patients:[],cfg:{practice:'Nephrology Associates',email:''}};}
+var DB=loadDB();
+function save(){try{sSet(SK,JSON.stringify(DB));}catch(e){}}
+
+// ── REFERENCE DATA ───────────────────────────────────────────────────────────
+var TM={
+  consult: {label:'Consult', bg:'#ede9fe', fg:'#5b21b6'},
+};
+var MODS=[
+  ['','No modifier'],['25','25 – E&M same day'],['26','26 – Professional component'],
+  ['TC','TC – Technical component'],['59','59 – Distinct service'],
+  ['76','76 – Repeat, same MD'],['77','77 – Repeat, other MD'],
+  ['GT','GT – Telehealth'],['GQ','GQ – Async telehealth'],
+  ['AI','AI – Principal physician'],['GC','GC – Resident'],
+  ['24','24 – Unrelated E&M'],['57','57 – Decision for surgery'],
+  ['52','52 – Reduced services'],['22','22 – Increased services'],
+  ['50','50 – Bilateral'],['LT','LT – Left side'],['RT','RT – Right side'],
+];
+var CPTS=[
+  {g:'── Hospital Visits ──', disabled:true},
+  {code:'99221',desc:'Initial hospital, low complexity'},
+  {code:'99222',desc:'Initial hospital, moderate complexity'},
+  {code:'99223',desc:'Initial hospital, high complexity'},
+  {code:'99231',desc:'Subsequent hospital, low complexity'},
+  {code:'99232',desc:'Subsequent hospital, moderate complexity'},
+  {code:'99233',desc:'Subsequent hospital, high complexity'},
+  {code:'99238',desc:'Hospital discharge, ≤30 min'},
+  {code:'99239',desc:'Hospital discharge, >30 min'},
+  {g:'── Consults ──', disabled:true},
+  {code:'99252',desc:'Inpatient consult, straightforward'},
+  {code:'99253',desc:'Inpatient consult, low complexity'},
+  {code:'99254',desc:'Inpatient consult, moderate complexity'},
+  {code:'99255',desc:'Inpatient consult, high complexity'},
+  {g:'── Critical Care ──', disabled:true},
+  {code:'99291',desc:'Critical care, first 30–74 min (physician)'},
+  {code:'99292',desc:"Critical care, each add'l 30 min"},
+  {code:'99468',desc:'Neonatal critical care, initial day'},
+  {code:'99469',desc:'Neonatal critical care, subsequent day'},
+  {g:'── Inpatient Dialysis ──', disabled:true},
+  {code:'90935',desc:'Hemodialysis, single physician eval'},
+  {code:'90937',desc:'Hemodialysis, repeat physician eval (same day)'},
+  {code:'90945',desc:'Peritoneal dialysis, single physician eval'},
+  {code:'90947',desc:'Peritoneal dialysis, repeat eval (same day)'},
+  {code:'90957',desc:'ESRD monthly services, 2 visits, 20–39'},
+  {code:'90958',desc:'ESRD monthly services, 2 visits, ≥40'},
+  {code:'90967',desc:'ESRD monthly services, <2 visits (any age)'},
+  {code:'90968',desc:'ESRD monthly services, 2–3 visits (any age)'},
+  {code:'90969',desc:'ESRD monthly services, 4+ visits (any age)'},
+  {code:'90970',desc:'ESRD services, per day (patient not dialysis'},
+  {code:'90963',desc:'ESRD home dialysis, full month, age ≥20'},
+  {code:'90966',desc:'ESRD home dialysis, full month, age <20'},
+  {g:'── CRRT / SLEDD ──', disabled:true},
+  {code:'90937',desc:'CRRT – repeat HD eval (used for CRRT billing)'},
+  {code:'0596T',desc:'Prolonged intermittent renal replacement (PIRRT)'},
+  {g:'── Procedures ──', disabled:true},
+  {code:'50200',desc:'Percutaneous renal biopsy'},
+  {code:'50432',desc:'Nephrostomy tube placement, perc'},
+  {code:'50430',desc:'Injection nephrostogram/ureterogram'},
+  {code:'36821',desc:'AV fistula creation, direct (native)'},
+  {code:'36819',desc:'AV fistula, autogenous graft (basilic transposition)'},
+  {code:'36818',desc:'AV fistula, autogenous graft (cephalic transposition)'},
+  {code:'36558',desc:'CVC insertion, tunneled, with subcutaneous port'},
+  {code:'36556',desc:'CVC insertion, non-tunneled, age ≥5'},
+  {code:'36800',desc:'AV shunt insertion (for dialysis)'},
+  {code:'36901',desc:'Fistulography with transcatheter therapy'},
+  {g:'── Observation ──', disabled:true},
+  {code:'99234',desc:'Observation/hosp same day, low complexity'},
+  {code:'99235',desc:'Observation/hosp same day, moderate complexity'},
+  {code:'99236',desc:'Observation/hosp same day, high complexity'},
+];
+var ICD_CATS={
+  'Nephrology':[
+    // ── ACUTE KIDNEY INJURY ──
+    ['N17.0','AKI with tubular necrosis'],
+    ['N17.1','AKI with acute cortical necrosis'],
+    ['N17.2','AKI with medullary necrosis'],
+    ['N17.8','Other acute kidney failure'],
+    ['N17.9','AKI, unspecified'],
+    // ── CKD ──
+    ['N18.1','CKD, stage 1'],
+    ['N18.2','CKD, stage 2 (mild)'],
+    ['N18.3','CKD, stage 3 (moderate)'],
+    ['N18.30','CKD, stage 3, unspecified'],
+    ['N18.31','CKD, stage 3a'],
+    ['N18.32','CKD, stage 3b'],
+    ['N18.4','CKD, stage 4 (severe)'],
+    ['N18.5','CKD, stage 5'],
+    ['N18.6','End stage renal disease (ESRD)'],
+    ['N18.9','CKD, unspecified'],
+    ['N19','Unspecified kidney failure'],
+    // ── HYPERTENSIVE KIDNEY DISEASE ──
+    ['I12.0','Hypertensive CKD with stage 5 or ESRD'],
+    ['I12.9','Hypertensive CKD with stage 1-4 or unspecified'],
+    ['I13.0','Hypertensive heart and CKD with stage 1-4'],
+    ['I13.10','Hypertensive heart and CKD without heart failure, stage 1-4'],
+    ['I13.11','Hypertensive heart and CKD without heart failure, stage 5 or ESRD'],
+    ['I13.2','Hypertensive heart and CKD with heart failure and stage 5 or ESRD'],
+    // ── GLOMERULAR DISEASE ──
+    ['N00.9','Acute nephritic syndrome, unspecified morphology'],
+    ['N01.9','Rapidly progressive nephritic syndrome, unspecified'],
+    ['N02.9','Recurrent and persistent hematuria, unspecified'],
+    ['N03.9','Chronic nephritic syndrome, unspecified'],
+    ['N04.0','Nephrotic syndrome with minor glomerular abnormality'],
+    ['N04.1','Nephrotic syndrome with focal/segmental glomerular lesions'],
+    ['N04.2','Nephrotic syndrome with diffuse membranous glomerulopathy'],
+    ['N04.3','Nephrotic syndrome with diffuse mesangial proliferative glomerulopathy'],
+    ['N04.4','Nephrotic syndrome with diffuse endocapillary proliferative glomerulopathy'],
+    ['N04.5','Nephrotic syndrome with diffuse mesangiocapillary glomerulopathy'],
+    ['N04.6','Nephrotic syndrome with dense deposit disease'],
+    ['N04.7','Nephrotic syndrome with diffuse crescentic glomerulonephritis'],
+    ['N04.8','Nephrotic syndrome with other morphologic changes'],
+    ['N04.9','Nephrotic syndrome, unspecified'],
+    ['N05.9','Unspecified nephritic syndrome, unspecified'],
+    ['N06.9','Isolated proteinuria with unspecified morphologic lesion'],
+    ['N07.9','Hereditary nephropathy NEC, unspecified'],
+    ['N08','Glomerular disorders in diseases classified elsewhere'],
+    // ── TUBULOINTERSTITIAL NEPHRITIS ──
+    ['N10','Acute pyelonephritis'],
+    ['N11.0','Nonobstructive reflux-associated chronic pyelonephritis'],
+    ['N11.1','Chronic obstructive pyelonephritis'],
+    ['N11.8','Other chronic tubulo-interstitial nephritis'],
+    ['N11.9','Chronic tubulo-interstitial nephritis, unspecified'],
+    ['N12','Tubulo-interstitial nephritis, not specified as acute or chronic'],
+    ['N14.0','Analgesic nephropathy'],
+    ['N14.1','Nephropathy due to other drugs/toxins'],
+    ['N14.2','Nephropathy due to unspecified drug/toxin'],
+    ['N14.3','Nephropathy due to heavy metals'],
+    ['N15.1','Renal and perinephric abscess'],
+    // ── OBSTRUCTIVE UROPATHY ──
+    ['N13.0','Hydronephrosis with ureteropelvic junction obstruction'],
+    ['N13.1','Hydronephrosis with ureteral stricture'],
+    ['N13.2','Hydronephrosis with renal and ureteral calculous obstruction'],
+    ['N13.30','Unspecified hydronephrosis'],
+    ['N13.39','Other hydronephrosis'],
+    // ── RENAL VASCULAR DISEASE ──
+    ['I28.0','Arteriovenous fistula, acquired (dialysis access)'],
+    ['I70.1','Atherosclerosis of renal artery'],
+    ['I77.1','Stricture of artery (renal artery stenosis)'],
+    ['N28.0','Ischemia and infarction of kidney'],
+    ['N28.1','Cyst of kidney'],
+    ['N28.81','Hypertrophy of kidney'],
+    ['N28.82','Megaloureter'],
+    ['N28.84','Pyelitis cystica'],
+    ['N28.85','Pyeloureteritis cystica'],
+    ['N28.86','Ureteritis cystica'],
+    ['N28.89','Other specified disorders of kidney'],
+    ['N28.9','Disorder of kidney and ureter, unspecified'],
+    // ── DIALYSIS ──
+    ['Z99.2','Dependence on renal dialysis'],
+    ['Z49.01','Encounter for fitting and adjustment of peritoneal dialysis catheter'],
+    ['Z49.02','Encounter for fitting and adjustment of hemodialysis catheter'],
+    ['Z49.31','Encounter for adequacy testing for hemodialysis'],
+    ['Z49.32','Encounter for adequacy testing for peritoneal dialysis'],
+    ['T82.49XA','Infection of dialysis catheter, initial encounter'],
+    ['T82.898A','Mechanical complication of dialysis catheter, initial encounter'],
+    // ── POLYCYSTIC & HEREDITARY KIDNEY DISEASE ──
+    ['Q61.2','Polycystic kidney, adult type (ADPKD)'],
+    ['Q61.3','Polycystic kidney, unspecified'],
+    ['Q61.4','Renal dysplasia'],
+    ['Q61.5','Medullary cystic kidney'],
+    ['Q61.8','Other cystic kidney diseases'],
+    // ── HEMATURIA & PROTEINURIA ──
+    ['R31.0','Gross hematuria'],
+    ['R31.1','Benign essential microscopic hematuria'],
+    ['R31.21','Asymptomatic microscopic hematuria'],
+    ['R80.0','Isolated orthostatic proteinuria'],
+    ['R80.1','Persistent proteinuria, unspecified'],
+    ['R80.2','Orthostatic proteinuria, unspecified'],
+    ['R80.3','Bence Jones proteinuria'],
+    ['R80.8','Other proteinuria'],
+    ['R80.9','Proteinuria, unspecified'],
+    // ── URINARY TRACT INFECTION ──
+    ['N39.0','Urinary tract infection, site not specified'],
+    ['N30.00','Acute cystitis without hematuria'],
+    ['N30.01','Acute cystitis with hematuria'],
+    ['N30.10','Interstitial cystitis (chronic) without hematuria'],
+    // ── RENAL CALCULI ──
+    ['N20.0','Calculus of kidney'],
+    ['N20.1','Calculus of ureter'],
+    ['N20.2','Calculus of kidney with calculus of ureter'],
+    ['N20.9','Urinary calculus, unspecified'],
+    ['N21.0','Calculus in bladder'],
+    // ── LUPUS/VASCULITIS NEPHRITIS ──
+    ['M32.14','Glomerular disease in systemic lupus erythematosus'],
+    ['M31.31','Wegener granulomatosis with renal involvement'],
+    ['M31.0','Hypersensitivity angiitis (microscopic polyangiitis renal)'],
+    ['D59.3','Hemolytic-uremic syndrome'],
+    ['M35.04','Sjögren syndrome with tubulo-interstitial nephropathy'],
+    // ── PARAPROTEIN / MYELOMA KIDNEY ──
+    ['C90.00','Multiple myeloma not in remission'],
+    ['E85.3','Secondary systemic amyloidosis'],
+    ['E85.4','Organ-limited amyloidosis'],
+    ['N16','Renal tubulo-interstitial disorders in diseases classified elsewhere'],
+    // ── OTHER ──
+    ['D63.1','Anemia in chronic kidney disease'],
+    ['E55.9','Vitamin D deficiency, unspecified'],
+    ['N25.0','Renal osteodystrophy'],
+    ['N25.1','Nephrogenic diabetes insipidus'],
+    ['N25.81','Secondary hyperaldosteronism'],
+    ['N25.89','Other disorders resulting from impaired renal tubular function'],
+    ['N25.9','Disorder resulting from impaired renal tubular function, unspecified'],
+    ['R94.4','Abnormal results of kidney function studies'],
+    // ── FROM RPA REFERENCE (PDF) ──
+    ['R34','Anuria and oliguria'],
+    ['R31.2','Other microscopic hematuria'],
+    ['R31.9','Hematuria, unspecified'],
+    ['M32.15','SLE with tubulo-interstitial nephropathy'],
+    ['M31.0','Goodpasture syndrome (anti-GBM disease)'],
+    ['N26.1','Atrophy of kidney'],
+    ['E21.2','Tertiary hyperparathyroidism'],
+    ['D50.0','Iron deficiency anemia due to chronic blood loss'],
+    ['E16.2','Hypoglycemia, unspecified'],
+    ['E22.2','SIADH (syndrome of inappropriate ADH)'],
+    ['E23.2','Diabetes insipidus, pituitary'],
+    ['R60.0','Localized edema'],
+    ['R60.1','Generalized edema'],
+    ['R60.9','Edema, unspecified (fluid retention NOS)'],
+    ['R41.82','Altered mental status, unspecified'],
+    ['R50.9','Fever, unspecified'],
+    ['R78.81','Bacteremia (excludes sepsis)'],
+    ['R94.31','Abnormal electrocardiogram (EKG/ECG)'],
+    ['I20.0','Unstable angina pectoris'],
+    ['I50.1','Left ventricular failure (LVF/CHF)'],
+    ['J81.0','Acute pulmonary edema'],
+    ['Z91.15','Noncompliance with renal dialysis'],
+    // ── HEMODIALYSIS ACCESS ──
+    ['T82.42XA','Displacement of hemodialysis catheter, initial'],
+    ['T82.43XA','Leakage of hemodialysis catheter, initial'],
+    ['T82.49XA','Obstruction of hemodialysis catheter, initial'],
+    ['T82.868A','Thrombosis of hemodialysis catheter (clotting), initial'],
+    ['T82.858A','Stenosis of AV graft/fistula, initial'],
+    ['T82.838A','Hemorrhage of AV graft/fistula, initial'],
+    ['T80.211A','Bloodstream infection from central line (CLABSI), initial'],
+    ['T80.212A','Local infection from central line, initial'],
+    // ── PD CATHETER ──
+    ['T85.631A','Leakage of PD catheter, initial'],
+    ['T85.86XA','Clotting of PD catheter, initial'],
+    ['T85.691A','Obstruction of PD catheter, initial'],
+    ['T85.621A','Displacement of PD catheter, initial'],
+    ['T85.71XA','Infection of PD catheter, initial'],
+  ],
+  'Electrolytes':[
+    ['E87.0','Hyperosmolality and hypernatremia'],
+    ['E87.1','Hypo-osmolality and hyponatremia'],
+    ['E87.2','Acidosis (general)'],
+    ['E87.3','Alkalosis (general)'],
+    ['E87.4','Mixed disorder of acid-base balance'],
+    ['E87.5','Hyperkalemia'],
+    ['E87.6','Hypokalemia'],
+    ['E87.7','Fluid overload'],
+    ['E87.70','Fluid overload, unspecified'],
+    ['E87.71','Transfusion associated circulatory overload (TACO)'],
+    ['E87.79','Other fluid overload'],
+    ['E87.8','Other disorders of electrolyte and fluid balance'],
+    ['E83.0','Disorders of copper metabolism (Wilson disease)'],
+    ['E83.10','Disorder of iron metabolism, unspecified'],
+    ['E83.110','Hereditary hemochromatosis'],
+    ['E83.111','Hemochromatosis due to repeated RBC transfusions'],
+    ['E83.118','Other hemochromatosis'],
+    ['E83.119','Hemochromatosis, unspecified'],
+    ['E83.2','Disorders of zinc metabolism'],
+    ['E83.30','Disorder of phosphorus metabolism, unspecified'],
+    ['E83.31','Familial hypophosphatemia'],
+    ['E83.32','Hereditary vitamin D-dependent rickets'],
+    ['E83.39','Other disorders of phosphorus metabolism'],
+    ['E83.40','Disorders of magnesium metabolism, unspecified'],
+    ['E83.41','Hypermagnesemia'],
+    ['E83.42','Hypomagnesemia'],
+    ['E83.49','Other disorders of magnesium metabolism'],
+    ['E83.51','Hypocalcemia'],
+    ['E83.52','Hypercalcemia'],
+    ['E83.59','Other disorders of calcium metabolism'],
+    ['E86.0','Dehydration'],
+    ['E86.1','Hypovolemia'],
+    ['E86.9','Volume depletion, unspecified'],
+    ['E89.2','Hypoparathyroidism following procedure'],
+    ['E20.0','Idiopathic hypoparathyroidism'],
+    ['E20.9','Hypoparathyroidism, unspecified'],
+    ['E21.0','Primary hyperparathyroidism'],
+    ['E21.1','Secondary hyperparathyroidism, NEC'],
+    ['E21.2','Other hyperparathyroidism'],
+    ['E21.3','Hyperparathyroidism, unspecified'],
+    ['N25.81','Secondary hyperaldosteronism'],
+  ],
+  'Acid-Base':[
+    ['E87.2','Acidosis, unspecified'],
+    ['E87.3','Alkalosis, unspecified'],
+    ['E87.4','Mixed disorder of acid-base balance'],
+    ['E87.20','Acidosis, unspecified'],
+    ['E87.21','Acute metabolic acidosis'],
+    ['E87.22','Chronic metabolic acidosis'],
+    ['E87.29','Other acidosis'],
+    ['J96.00','Acute respiratory failure, unspecified hypoxia/hypercapnia'],
+    ['J96.01','Acute respiratory failure with hypoxia'],
+    ['J96.02','Acute respiratory failure with hypercapnia'],
+    ['J96.10','Chronic respiratory failure, unspecified'],
+    ['J96.11','Chronic respiratory failure with hypoxia'],
+    ['J96.12','Chronic respiratory failure with hypercapnia'],
+    ['J96.20','Acute and chronic respiratory failure, unspecified'],
+    ['J96.21','Acute and chronic respiratory failure with hypoxia'],
+    ['J96.22','Acute and chronic respiratory failure with hypercapnia'],
+    ['E08.10','Diabetes due to underlying condition with ketoacidosis without coma'],
+    ['E08.11','Diabetes due to underlying condition with ketoacidosis with coma'],
+    ['E10.10','T1DM with diabetic ketoacidosis without coma'],
+    ['E10.11','T1DM with diabetic ketoacidosis with coma'],
+    ['E11.00','T2DM with hyperosmolarity without NKHHC'],
+    ['E11.01','T2DM with hyperosmolarity with coma'],
+    ['E11.10','T2DM with ketoacidosis without coma'],
+    ['E11.11','T2DM with ketoacidosis with coma'],
+    ['N18.3','CKD stage 3 (uremic acidosis)'],
+    ['N18.4','CKD stage 4 (uremic acidosis)'],
+    ['N18.5','CKD stage 5 (uremic acidosis)'],
+    ['N25.89','Disorders from impaired tubular function (RTA)'],
+    ['E72.09','Other disorders of amino-acid transport (Fanconi syndrome)'],
+    ['K76.7','Hepatorenal syndrome'],
+    ['R09.02','Hypoxemia'],
+    ['R06.00','Dyspnea, unspecified'],
+    ['R06.09','Other forms of dyspnea'],
+    ['Z99.11','Dependence on respirator'],
+    ['Z99.12','Encounter for respirator weaning'],
+  ],
+  'Kidney Transplant':[
+    // ── TRANSPLANT STATUS ──
+    ['Z94.0','Kidney transplant status'],
+    ['Z48.22','Encounter for aftercare following kidney transplant'],
+    ['Z52.4','Kidney donor'],
+    // ── TRANSPLANT COMPLICATIONS ──
+    ['T86.10','Unspecified complication of kidney transplant'],
+    ['T86.11','Kidney transplant rejection'],
+    ['T86.12','Kidney transplant failure'],
+    ['T86.13','Kidney transplant infection'],
+    ['T86.19','Other complication of kidney transplant'],
+    // ── REJECTION TYPES (use with T86.11) ──
+    ['T86.11','Hyperacute rejection of kidney transplant'],
+    ['T86.11','Acute cellular rejection of kidney transplant'],
+    ['T86.11','Antibody-mediated rejection of kidney transplant'],
+    ['T86.11','Chronic rejection of kidney transplant'],
+    // ── CKD POST-TRANSPLANT ──
+    ['N18.1','CKD post-transplant, stage 1'],
+    ['N18.2','CKD post-transplant, stage 2'],
+    ['N18.3','CKD post-transplant, stage 3'],
+    ['N18.4','CKD post-transplant, stage 4'],
+    ['N18.5','CKD post-transplant, stage 5'],
+    ['N18.6','ESRD post-transplant'],
+    // ── IMMUNOSUPPRESSION ──
+    ['Z79.899','Long-term use of immunosuppression medication'],
+    ['Z79.52','Long-term use of systemic steroids'],
+    ['Z79.4','Long-term use of insulin'],
+    ['T45.1X5A','Adverse effect of antineoplastic/immunosuppressive drugs, initial'],
+    // ── VASCULAR COMPLICATIONS ──
+    ['I28.0','Renal artery stenosis (transplant)'],
+    ['T82.898A','Mechanical complication of other vascular grafts, initial'],
+    ['I82.3','Thrombosis of renal vein'],
+    // ── INFECTIONS ──
+    ['B25.9','Cytomegalovirus (CMV) disease, unspecified'],
+    ['B25.0','CMV pneumonitis'],
+    ['B25.1','CMV hepatitis'],
+    ['B25.2','CMV pancreatitis'],
+    ['B25.8','Other CMV diseases'],
+    ['B97.21','BK virus as cause of disease'],
+    ['B34.3','BK polyomavirus infection, unspecified'],
+    ['A41.9','Sepsis, unspecified organism'],
+    ['A41.51','Sepsis due to Pseudomonas'],
+    ['A41.52','Sepsis due to Pseudomonas (UTI source)'],
+    ['B44.1','Other pulmonary aspergillosis'],
+    ['B37.0','Candidal stomatitis'],
+    ['B37.89','Other sites of candidiasis'],
+    ['B59','Pneumocystis pneumonia (PCP)'],
+    // ── POST-TRANSPLANT DIABETES ──
+    ['E13.9','Other specified DM without complications (PTDM)'],
+    ['E13.65','Other specified DM with hyperglycemia'],
+    ['E13.649','Other specified DM with hypoglycemia without coma'],
+    // ── OTHER COMPLICATIONS ──
+    ['N04.1','Focal and segmental glomerular lesions (recurrent FSGS)'],
+    ['N04.2','Membranous glomerulopathy (recurrent)'],
+    ['N04.5','Mesangiocapillary glomerulopathy (recurrent)'],
+    ['L27.0','Generalized skin eruption due to drugs (drug rash)'],
+    ['D47.Z1','Post-transplant lymphoproliferative disorder (PTLD)'],
+    ['C85.88','Other types of non-Hodgkin lymphoma (PTLD)'],
+    ['E78.5','Hyperlipidemia, unspecified (post-transplant)'],
+    ['I10','Essential hypertension (post-transplant)'],
+    ['M81.0','Age-related osteoporosis (steroid-related)'],
+    ['M85.80','Other specified disorders of bone density'],
+    ['N28.0','Ischemia and infarction of kidney (transplant)'],
+    ['Z87.442','Personal history of urinary calculi'],
+  ],
+  'Hepatology':[
+    // ── ACUTE LIVER FAILURE ──
+    ['K72.00','Acute liver failure without coma'],
+    ['K72.01','Acute liver failure with coma'],
+    ['K72.10','Chronic liver failure without coma'],
+    ['K72.11','Chronic liver failure with coma'],
+    ['K72.90','Hepatic failure, unspecified, without coma'],
+    ['K72.91','Hepatic failure, unspecified, with coma'],
+    // ── ALCOHOLIC LIVER DISEASE ──
+    ['K70.0','Alcoholic fatty liver'],
+    ['K70.10','Alcoholic hepatitis without ascites'],
+    ['K70.11','Alcoholic hepatitis with ascites'],
+    ['K70.2','Alcoholic fibrosis and sclerosis of liver'],
+    ['K70.30','Alcoholic cirrhosis of liver without ascites'],
+    ['K70.31','Alcoholic cirrhosis of liver with ascites'],
+    ['K70.40','Alcoholic hepatic failure without coma'],
+    ['K70.41','Alcoholic hepatic failure with coma'],
+    ['K70.9','Alcoholic liver disease, unspecified'],
+    // ── CIRRHOSIS ──
+    ['K74.0','Hepatic fibrosis, unspecified'],
+    ['K74.00','Hepatic fibrosis, unspecified'],
+    ['K74.01','Hepatic fibrosis, early fibrosis'],
+    ['K74.02','Hepatic fibrosis, advanced fibrosis'],
+    ['K74.1','Hepatic sclerosis'],
+    ['K74.2','Hepatic fibrosis with hepatic sclerosis'],
+    ['K74.3','Primary biliary cirrhosis'],
+    ['K74.4','Secondary biliary cirrhosis'],
+    ['K74.5','Biliary cirrhosis, unspecified'],
+    ['K74.60','Unspecified cirrhosis of liver'],
+    ['K74.69','Other cirrhosis of liver'],
+    // ── PORTAL HYPERTENSION ──
+    ['K76.6','Portal hypertension'],
+    ['K76.7','Hepatorenal syndrome'],
+    ['K76.1','Chronic passive congestion of liver'],
+    ['K70.5','Alcoholic hepatic failure'],
+    // ── HEPATITIS ──
+    ['B18.0','Chronic viral hepatitis B with delta-agent'],
+    ['B18.1','Chronic viral hepatitis B without delta-agent'],
+    ['B18.2','Chronic viral hepatitis C'],
+    ['B18.8','Other chronic viral hepatitis'],
+    ['B18.9','Chronic viral hepatitis, unspecified'],
+    ['B19.10','Unspecified viral hepatitis B without hepatic coma'],
+    ['B19.11','Unspecified viral hepatitis B with hepatic coma'],
+    ['B19.20','Unspecified viral hepatitis C without hepatic coma'],
+    ['B19.21','Unspecified viral hepatitis C with hepatic coma'],
+    ['K75.0','Abscess of liver'],
+    ['K75.1','Phlebitis of portal vein'],
+    ['K75.2','Nonspecific reactive hepatitis'],
+    ['K75.3','Granulomatous hepatitis NEC'],
+    ['K75.4','Autoimmune hepatitis'],
+    ['K75.81','Nonalcoholic steatohepatitis (NASH)'],
+    ['K75.89','Other specified inflammatory liver diseases'],
+    ['K75.9','Inflammatory liver disease, unspecified'],
+    ['K76.0','Fatty (change of) liver (NAFLD)'],
+    ['K76.2','Central haemorrhagic necrosis of liver'],
+    ['K76.3','Infarction of liver'],
+    ['K76.4','Peliosis hepatis'],
+    ['K76.5','Hepatic veno-occlusive disease'],
+    ['K76.81','Hepatopulmonary syndrome'],
+    ['K76.89','Other specified diseases of liver'],
+    ['K76.9','Liver disease, unspecified'],
+    // ── BILE DUCT ──
+    ['K80.50','Calculus of bile duct without cholangitis or cholecystitis'],
+    ['K83.0','Cholangitis'],
+    ['K83.1','Obstruction of bile duct'],
+    ['K83.2','Perforation of bile duct'],
+    ['K83.4','Spasm of sphincter of Oddi'],
+    ['K83.5','Biliary cyst'],
+    ['K83.8','Other specified diseases of biliary tract'],
+    // ── LIVER TRANSPLANT ──
+    ['Z94.4','Liver transplant status'],
+    ['T86.40','Liver transplant complication, unspecified'],
+    ['T86.41','Liver transplant rejection'],
+    ['T86.42','Liver transplant failure'],
+    ['T86.43','Liver transplant infection'],
+    ['T86.49','Other liver transplant complication'],
+    ['Z48.23','Encounter for aftercare following liver transplant'],
+    ['T86.4','Liver transplant failure and rejection'],
+    // ── WILSON DISEASE / METABOLIC ──
+    ['E83.01','Wilson disease'],
+    ['E80.5','Crigler-Najjar syndrome'],
+    ['E80.6','Other disorders of bilirubin metabolism'],
+    ['E80.7','Disorder of bilirubin metabolism, unspecified'],
+  ],
+  'Diabetes':[
+    // ── TYPE 1 DIABETES ──
+    ['E10.21','T1DM with diabetic nephropathy'],
+    ['E10.9','T1DM without complications'],
+    ['E10.10','T1DM with diabetic ketoacidosis without coma'],
+    ['E10.11','T1DM with diabetic ketoacidosis with coma'],
+    ['E10.21','T1DM with diabetic CKD, stage I-II or unspecified'],
+    ['E10.22','T1DM with diabetic CKD, stage III'],
+    ['E10.29','T1DM with other diabetic CKD'],
+    ['E10.40','T1DM with diabetic neuropathy, unspecified'],
+    ['E10.41','T1DM with diabetic mononeuropathy'],
+    ['E10.42','T1DM with diabetic polyneuropathy'],
+    ['E10.43','T1DM with diabetic autonomic (poly)neuropathy'],
+    ['E10.44','T1DM with diabetic amyotrophy'],
+    ['E10.49','T1DM with other diabetic neurological complication'],
+    ['E10.51','T1DM with diabetic peripheral angiopathy without gangrene'],
+    ['E10.52','T1DM with diabetic peripheral angiopathy with gangrene'],
+    ['E10.59','T1DM with other circulatory complications'],
+    ['E10.610','T1DM with diabetic neuropathic arthropathy'],
+    ['E10.618','T1DM with other diabetic arthropathy'],
+    ['E10.620','T1DM with diabetic dermatitis'],
+    ['E10.628','T1DM with other skin complications'],
+    ['E10.641','T1DM with hypoglycemia with coma'],
+    ['E10.649','T1DM with hypoglycemia without coma'],
+    ['E10.65','T1DM with hyperglycemia'],
+    ['E10.69','T1DM with other specified complication'],
+    ['E10.8','T1DM with unspecified complications'],
+    // ── TYPE 2 DIABETES ──
+    ['E11.21','T2DM with diabetic nephropathy'],
+    ['E11.9','T2DM without complications'],
+    ['E11.00','T2DM with hyperosmolarity without NKHHC'],
+    ['E11.01','T2DM with hyperosmolarity with coma (HHNS)'],
+    ['E11.10','T2DM with ketoacidosis without coma'],
+    ['E11.11','T2DM with ketoacidosis with coma'],
+    ['E11.21','T2DM with diabetic CKD, stage I-II or unspecified'],
+    ['E11.22','T2DM with diabetic CKD, stage III'],
+    ['E11.29','T2DM with other diabetic CKD'],
+    ['E11.40','T2DM with diabetic neuropathy, unspecified'],
+    ['E11.41','T2DM with diabetic mononeuropathy'],
+    ['E11.42','T2DM with diabetic polyneuropathy'],
+    ['E11.43','T2DM with diabetic autonomic (poly)neuropathy'],
+    ['E11.44','T2DM with diabetic amyotrophy'],
+    ['E11.49','T2DM with other diabetic neurological complication'],
+    ['E11.51','T2DM with diabetic peripheral angiopathy without gangrene'],
+    ['E11.52','T2DM with diabetic peripheral angiopathy with gangrene'],
+    ['E11.59','T2DM with other circulatory complications'],
+    ['E11.610','T2DM with diabetic neuropathic arthropathy'],
+    ['E11.618','T2DM with other diabetic arthropathy'],
+    ['E11.620','T2DM with diabetic dermatitis'],
+    ['E11.628','T2DM with other skin complications'],
+    ['E11.641','T2DM with hypoglycemia with coma'],
+    ['E11.649','T2DM with hypoglycemia without coma'],
+    ['E11.65','T2DM with hyperglycemia'],
+    ['E11.69','T2DM with other specified complication'],
+    ['E11.8','T2DM with unspecified complications'],
+    // ── DM DUE TO UNDERLYING CONDITION / OTHER ──
+    ['E08.21','DM due to underlying condition with diabetic nephropathy'],
+    ['E08.22','DM due to underlying condition with diabetic CKD'],
+    ['E08.9','DM due to underlying condition, without complications'],
+    ['E08.10','DM due to underlying condition with ketoacidosis, without coma'],
+    ['E08.22','DM due to underlying condition with diabetic CKD'],
+    ['E08.649','DM due to underlying condition with hypoglycemia without coma'],
+    ['E08.65','DM due to underlying condition with hyperglycemia'],
+    ['E09.9','Drug or chemical induced DM, without complications'],
+    ['E09.10','Drug or chemical induced DM with ketoacidosis, without coma'],
+    ['E09.22','Drug or chemical induced DM with CKD'],
+    ['E09.649','Drug or chemical induced DM with hypoglycemia without coma'],
+    ['E09.65','Drug or chemical induced DM with hyperglycemia'],
+    ['E13.9','Other specified DM without complications'],
+    ['E13.10','Other specified DM with ketoacidosis without coma'],
+    ['E13.22','Other specified DM with diabetic CKD'],
+    ['E13.649','Other specified DM with hypoglycemia without coma'],
+    ['E13.65','Other specified DM with hyperglycemia'],
+    // ── LONG-TERM MEDICATION ──
+    ['Z79.4','Long-term (current) use of insulin'],
+    ['Z79.84','Long-term use of oral hypoglycemic drugs'],
+    ['Z79.899','Long-term use of immunosuppression medication'],
+    // ── COMPLICATIONS CODE WITH DM ──
+    ['N18.1','CKD stage 1 (code with DM code)'],
+    ['N18.2','CKD stage 2 (code with DM code)'],
+    ['N18.3','CKD stage 3 (code with DM code)'],
+    ['N18.4','CKD stage 4 (code with DM code)'],
+    ['N18.5','CKD stage 5 (code with DM code)'],
+    ['N18.6','ESRD (code with DM code)'],
+  ],
+  'General':[
+    // ── PREPROCEDURAL ──
+    ['Z01.810','Preprocedural examination, cardiovascular'],
+    ['Z01.811','Preprocedural examination, respiratory'],
+    ['Z01.818','Preprocedural examination, other'],
+    ['Z01.89','Encounter for other specified special examinations'],
+    // ── HYPOTENSION ──
+    ['I95.0','Idiopathic hypotension'],
+    ['I95.1','Orthostatic hypotension'],
+    ['I95.2','Hypotension due to drugs'],
+    ['I95.3','Hypotension of hemodialysis'],
+    ['I95.81','Postprocedural hypotension'],
+    ['I95.89','Other hypotension'],
+    ['I95.9','Hypotension, unspecified'],
+    // ── LONG-TERM MEDICATIONS ──
+    ['Z79.899','Long-term immunosuppression medication'],
+    ['Z79.52','Long-term systemic steroids'],
+    ['Z79.51','Long-term inhaled steroids'],
+    ['Z79.4','Long-term insulin use'],
+    ['Z79.84','Long-term oral hypoglycemics'],
+    ['Z79.01','Long-term use of anticoagulants'],
+    ['Z79.02','Long-term use of antithrombotics'],
+    ['Z79.891','Long-term use of opiate analgesic'],
+    // ── SEPSIS ──
+    ['A41.9','Sepsis, unspecified organism'],
+    ['A41.01','Sepsis due to MSSA'],
+    ['A41.02','Sepsis due to MRSA'],
+    ['A41.11','Sepsis due to Streptococcus pneumoniae'],
+    ['A41.2','Sepsis due to unspecified Staphylococcus'],
+    ['A41.3','Sepsis due to Hemophilus influenzae'],
+    ['A41.4','Sepsis due to anaerobes'],
+    ['A41.50','Gram-negative sepsis, unspecified'],
+    ['A41.51','Sepsis due to Escherichia coli'],
+    ['A41.52','Sepsis due to Pseudomonas'],
+    ['A41.53','Sepsis due to Serratia'],
+    ['A41.59','Other gram-negative sepsis'],
+    ['R65.10','Systemic inflammatory response syndrome (SIRS)'],
+    ['R65.11','SIRS with acute organ dysfunction'],
+    ['R65.20','Severe sepsis without septic shock'],
+    ['R65.21','Severe sepsis with septic shock'],
+    // ── HYPERTENSION ──
+    ['I10','Essential (primary) hypertension'],
+    ['I11.0','Hypertensive heart disease with heart failure'],
+    ['I11.9','Hypertensive heart disease without heart failure'],
+    ['I16.0','Hypertensive urgency'],
+    ['I16.1','Hypertensive emergency'],
+    ['I16.9','Hypertensive crisis, unspecified'],
+    // ── ANEMIA ──
+    ['D63.1','Anemia in chronic kidney disease'],
+    ['D63.8','Anemia in other chronic diseases'],
+    ['D64.9','Anemia, unspecified'],
+    ['D50.9','Iron deficiency anemia, unspecified'],
+    ['D51.9','Vitamin B12 deficiency anemia, unspecified'],
+    ['D52.9','Folate deficiency anemia, unspecified'],
+    // ── VITAMIN D ──
+    ['E55.0','Rickets, active'],
+    ['E55.9','Vitamin D deficiency, unspecified'],
+    ['M83.9','Adult osteomalacia, unspecified'],
+    ['M81.0','Age-related osteoporosis without current pathological fracture'],
+    // ── HEART FAILURE ──
+    ['I50.20','Unspecified systolic heart failure'],
+    ['I50.21','Acute systolic heart failure'],
+    ['I50.22','Chronic systolic heart failure'],
+    ['I50.23','Acute on chronic systolic heart failure'],
+    ['I50.30','Unspecified diastolic heart failure'],
+    ['I50.31','Acute diastolic heart failure'],
+    ['I50.32','Chronic diastolic heart failure'],
+    ['I50.33','Acute on chronic diastolic heart failure'],
+    ['I50.40','Unspecified combined systolic and diastolic heart failure'],
+    ['I50.9','Heart failure, unspecified'],
+    // ── PULMONARY ──
+    ['J18.9','Pneumonia, unspecified organism'],
+    ['J15.0','Pneumonia due to Klebsiella pneumoniae'],
+    ['J15.1','Pneumonia due to Pseudomonas'],
+    ['J15.7','Pneumonia due to Mycoplasma pneumoniae'],
+    ['J15.9','Unspecified bacterial pneumonia'],
+    // ── MISCELLANEOUS HOSPITAL ──
+    ['Z51.11','Encounter for antineoplastic chemotherapy'],
+    ['Z51.12','Encounter for antineoplastic immunotherapy'],
+    ['R73.09','Other abnormal glucose (hyperglycemia NOS)'],
+    ['R73.01','Impaired fasting glucose'],
+    ['E66.9','Obesity, unspecified'],
+    ['E66.01','Morbid obesity due to excess calories'],
+    ['E78.5','Hyperlipidemia, unspecified'],
+    ['E78.00','Pure hypercholesterolemia, unspecified'],
+    ['K92.1','Melena'],
+    ['K92.0','Hematemesis'],
+    ['R18.0','Malignant ascites'],
+    ['R18.8','Other ascites'],
+  ],
+  'Symptoms':[
+    ['R50.81','Fever with conditions classified elsewhere'],
+    ['R50.82','Postprocedural fever'],
+    ['R50.83','Postvaccination fever'],
+    ['R53.1','Weakness'],
+    ['R53.81','Malaise, other'],
+    ['R53.83','Other fatigue'],
+    ['R61','Generalized hyperhidrosis'],
+    ['R63.0','Anorexia'],
+    ['R63.1','Polydipsia'],
+    ['R63.4','Abnormal weight loss'],
+    ['R63.5','Abnormal weight gain'],
+    ['R64','Cachexia'],
+    ['R68.89','Other general symptoms and signs'],
+    ['R52','Pain, unspecified'],
+    ['R51.9','Headache, unspecified'],
+    ['R07.9','Chest pain, unspecified'],
+    ['R07.1','Chest pain on breathing, pleuritic'],
+    ['R10.9','Unspecified abdominal pain'],
+    ['R10.0','Acute abdomen'],
+    ['R10.10','Upper abdominal pain, unspecified'],
+    ['R10.30','Lower abdominal pain, unspecified'],
+    ['M54.50','Low back pain, unspecified'],
+    ['M54.2','Cervicalgia, neck pain'],
+    ['M25.50','Pain in unspecified joint, arthralgia'],
+    ['M79.1','Myalgia, muscle aches'],
+    ['G89.29','Other chronic pain'],
+    ['R11.0','Nausea alone'],
+    ['R11.10','Vomiting, unspecified'],
+    ['R11.2','Nausea with vomiting, unspecified'],
+    ['R19.7','Diarrhea, unspecified'],
+    ['K59.00','Constipation, unspecified'],
+    ['R14.0','Abdominal distension, bloating'],
+    ['R12','Heartburn'],
+    ['R13.10','Dysphagia, unspecified'],
+    ['K21.0','GERD with esophagitis'],
+    ['R17','Unspecified jaundice'],
+    ['R16.0','Hepatomegaly NEC'],
+    ['R16.1','Splenomegaly NEC'],
+    ['R05.9','Cough, unspecified'],
+    ['R05.1','Acute cough'],
+    ['R06.01','Orthopnea, dyspnea when lying flat'],
+    ['R06.2','Wheezing'],
+    ['R04.2','Hemoptysis, coughing blood'],
+    ['R23.1','Cyanosis'],
+    ['R42','Dizziness and giddiness'],
+    ['R55','Syncope and collapse'],
+    ['R41.0','Disorientation, unspecified'],
+    ['R41.3','Other amnesia'],
+    ['R41.89','Other specified cognitive deficit'],
+    ['G47.00','Insomnia, unspecified'],
+    ['R56.9','Unspecified convulsions'],
+    ['R47.01','Aphasia'],
+    ['R25.2','Cramp and spasm'],
+    ['R26.89','Other abnormalities of gait and mobility'],
+    ['R20.2','Paraesthesia of skin, tingling or numbness'],
+    ['R00.0','Tachycardia, unspecified'],
+    ['R00.1','Bradycardia, unspecified'],
+    ['R00.8','Palpitations'],
+    ['R03.0','Elevated blood-pressure reading, without HTN diagnosis'],
+    ['R03.1','Nonspecific low blood-pressure reading'],
+    ['R21','Rash and other nonspecific skin eruption'],
+    ['R23.3','Spontaneous ecchymoses, easy bruising'],
+    ['L50.9','Urticaria, unspecified, hives'],
+    ['R30.0','Dysuria, painful urination'],
+    ['R35.0','Frequency of micturition'],
+    ['R35.1','Nocturia'],
+    ['R39.11','Hesitancy of micturition, weak stream'],
+    ['R39.15','Urgency of urination'],
+  ],
+  'Hematology':[
+    ['D50.1','Sideropenic dysphagia, Plummer-Vinson syndrome'],
+    ['D50.8','Other iron deficiency anemias'],
+    ['D51.0','Vitamin B12 deficiency anemia, pernicious anemia'],
+    ['D51.1','Vitamin B12 deficiency anemia, Imerslund syndrome'],
+    ['D51.3','Other dietary vitamin B12 deficiency anemia'],
+    ['D52.0','Dietary folate deficiency anemia'],
+    ['D52.1','Drug-induced folate deficiency anemia'],
+    ['D53.1','Other megaloblastic anemias NEC'],
+    ['D55.0','Anemia due to G6PD deficiency'],
+    ['D55.2','Anemia due to glycolytic enzyme disorders'],
+    ['D56.0','Alpha thalassemia'],
+    ['D56.1','Beta thalassemia'],
+    ['D56.9','Thalassemia, unspecified'],
+    ['D57.00','Hb-SS disease with crisis, sickle cell crisis'],
+    ['D57.1','Sickle-cell disease without crisis, Hb-SS'],
+    ['D57.20','Sickle-cell/Hb-C disease without crisis'],
+    ['D57.3','Sickle-cell trait'],
+    ['D58.0','Hereditary spherocytosis'],
+    ['D58.1','Hereditary elliptocytosis'],
+    ['D59.0','Drug-induced autoimmune hemolytic anemia'],
+    ['D59.10','Autoimmune hemolytic anemia, unspecified, AIHA'],
+    ['D59.11','Warm autoimmune hemolytic anemia'],
+    ['D59.12','Cold autoimmune hemolytic anemia, cold agglutinin disease'],
+    ['D59.4','Other nonautoimmune hemolytic anemias, microangiopathic'],
+    ['D60.0','Chronic acquired pure red cell aplasia'],
+    ['D60.1','Transient acquired pure red cell aplasia'],
+    ['D60.9','Acquired pure red cell aplasia, unspecified'],
+    ['D61.01','Diamond-Blackfan anemia'],
+    ['D61.09','Other constitutional aplastic anemia, Fanconi anemia'],
+    ['D61.1','Drug-induced aplastic anemia'],
+    ['D61.2','Aplastic anemia due to other external agents'],
+    ['D61.3','Idiopathic aplastic anemia'],
+    ['D61.9','Aplastic anemia, unspecified'],
+    ['D62','Acute posthemorrhagic anemia'],
+    ['D63.0','Anemia in neoplastic disease'],
+    ['D64.0','Hereditary sideroblastic anemia'],
+    ['D64.1','Secondary sideroblastic anemia due to disease'],
+    ['D64.3','Other sideroblastic anemias'],
+    ['D64.4','Congenital dyserythropoietic anemia'],
+    ['D64.81','Anemia due to antineoplastic chemotherapy'],
+    ['D64.89','Other specified anemias'],
+    ['D70.0','Congenital agranulocytosis, Kostmann syndrome'],
+    ['D70.1','Agranulocytosis secondary to cancer chemotherapy'],
+    ['D70.2','Other drug-induced agranulocytosis'],
+    ['D70.3','Neutropenia due to infection'],
+    ['D70.4','Cyclic neutropenia'],
+    ['D70.8','Other neutropenia'],
+    ['D70.9','Neutropenia, unspecified'],
+    ['D72.0','Genetic anomalies of leukocytes'],
+    ['D72.1','Eosinophilia'],
+    ['D72.810','Lymphocytopenia'],
+    ['D72.819','Decreased white blood cell count, leukopenia'],
+    ['D72.820','Lymphocytosis, symptomatic'],
+    ['D72.821','Monocytosis, symptomatic'],
+    ['D72.823','Leukemoid reaction'],
+    ['D72.825','Bandemia, excess band neutrophils'],
+    ['D72.829','Elevated white blood cell count, leukocytosis'],
+    ['D72.89','Other specified disorders of white blood cells'],
+    ['D72.9','Disorder of white blood cells, unspecified'],
+    ['D69.0','Allergic purpura, Henoch-Schonlein'],
+    ['D69.1','Qualitative platelet defects, Bernard-Soulier, Glanzmann'],
+    ['D69.2','Other nonthrombocytopenic purpura'],
+    ['D69.3','Immune thrombocytopenic purpura, ITP'],
+    ['D69.41','Evans syndrome, AIHA plus ITP'],
+    ['D69.42','Congenital and hereditary thrombocytopenia purpura'],
+    ['D69.49','Other primary thrombocytopenia'],
+    ['D69.51','Posttransfusion purpura, PTP'],
+    ['D69.59','Other secondary thrombocytopenia'],
+    ['D69.6','Thrombocytopenia, unspecified'],
+    ['D69.8','Other specified hemorrhagic conditions'],
+    ['D69.9','Hemorrhagic condition, unspecified'],
+    ['D75.82','Heparin-induced thrombocytopenia, HIT'],
+    ['D75.839','Thrombocytosis, unspecified'],
+    ['D47.3','Essential thrombocythemia, ET'],
+    ['M31.1','Thrombotic microangiopathy, TTP'],
+    ['D65','Disseminated intravascular coagulation, DIC'],
+    ['D66','Hereditary factor VIII deficiency, Hemophilia A'],
+    ['D67','Hereditary factor IX deficiency, Hemophilia B'],
+    ['D68.0','Von Willebrand disease'],
+    ['D68.1','Hereditary factor XI deficiency, Hemophilia C'],
+    ['D68.2','Hereditary deficiency of other clotting factors'],
+    ['D68.311','Acquired hemophilia'],
+    ['D68.312','Antiphospholipid antibody with hemorrhagic disorder'],
+    ['D68.32','Hemorrhagic disorder due to extrinsic anticoagulants, warfarin'],
+    ['D68.4','Acquired coagulation factor deficiency'],
+    ['D68.51','Activated protein C resistance, Factor V Leiden'],
+    ['D68.52','Prothrombin gene mutation'],
+    ['D68.59','Other primary thrombophilia, Protein C or S deficiency'],
+    ['D68.61','Antiphospholipid syndrome, APS'],
+    ['D68.62','Lupus anticoagulant syndrome'],
+    ['D68.69','Other thrombophilia'],
+    ['D68.8','Other specified coagulation defects'],
+    ['D68.9','Coagulation defect, unspecified'],
+    ['D45','Polycythemia vera'],
+    ['D46.0','MDS refractory anemia without ring sideroblasts'],
+    ['D46.1','MDS refractory anemia with ring sideroblasts'],
+    ['D46.20','MDS refractory anemia with excess blasts, unspecified'],
+    ['D46.9','Myelodysplastic syndrome, unspecified'],
+    ['D47.1','Chronic myeloproliferative disease'],
+    ['D47.4','Osteomyelofibrosis, primary myelofibrosis'],
+    ['D75.0','Familial erythrocytosis'],
+    ['D75.1','Secondary polycythemia'],
+    ['D75.81','Myelofibrosis, secondary'],
+    ['D75.89','Other specified diseases of the blood'],
+    ['D75.9','Disease of blood and blood-forming organs, unspecified'],
+    ['D76.1','Hemophagocytic lymphohistiocytosis, HLH'],
+    ['D76.2','Hemophagocytic syndrome, infection-associated'],
+    ['R70.0','Elevated erythrocyte sedimentation rate, ESR'],
+    ['R70.1','Abnormal plasma viscosity'],
+    ['R71.0','Precipitous drop in hematocrit'],
+    ['R71.8','Other abnormality of red blood cells, poikilocytosis'],
+  ],
+  'Urology':[
+    ['Q60.0','Renal agenesis, unilateral'],
+    ['Q60.1','Renal agenesis, bilateral'],
+    ['Q60.2','Renal agenesis, unspecified'],
+    ['Q60.3','Renal hypoplasia, unilateral'],
+    ['Q60.4','Renal hypoplasia, bilateral'],
+    ['Q60.5','Renal hypoplasia, unspecified'],
+    ['Q60.6','Potter syndrome'],
+    ['Q61.00','Congenital renal cyst, unspecified'],
+    ['Q61.01','Congenital single renal cyst'],
+    ['Q61.02','Congenital multiple renal cysts'],
+    ['Q61.11','Cystic dilatation of collecting ducts'],
+    ['Q61.19','Other polycystic kidney, infantile type'],
+    ['Q62.0','Congenital hydronephrosis'],
+    ['Q62.10','Congenital occlusion of ureter, unspecified'],
+    ['Q62.11','Congenital UPJ obstruction'],
+    ['Q62.12','Congenital UVJ obstruction'],
+    ['Q62.2','Congenital megaureter'],
+    ['Q62.31','Congenital ureterocele, orthotopic'],
+    ['Q62.32','Cecoureterocele, ectopic ureterocele'],
+    ['Q62.39','Other obstructive defects of renal pelvis and ureter'],
+    ['Q63.0','Accessory kidney, supernumerary'],
+    ['Q63.1','Horseshoe kidney'],
+    ['Q63.2','Ectopic kidney'],
+    ['Q63.3','Hyperplastic and giant kidney'],
+    ['Z90.5','Acquired absence of kidney, post-nephrectomy'],
+    ['Z90.711','Acquired absence of right kidney'],
+    ['Z90.712','Acquired absence of left kidney'],
+    ['Z90.719','Acquired absence of unspecified kidney'],
+    ['Z90.721','Acquired absence of right kidney and ureter'],
+    ['Z90.722','Acquired absence of left kidney and ureter'],
+    ['Z90.729','Acquired absence of unspecified kidney and ureter'],
+    ['C64.1','Malignant neoplasm of right kidney, RCC'],
+    ['C64.2','Malignant neoplasm of left kidney, RCC'],
+    ['C64.9','Malignant neoplasm of unspecified kidney'],
+    ['C65.1','Malignant neoplasm of right renal pelvis, TCC'],
+    ['C65.2','Malignant neoplasm of left renal pelvis, TCC'],
+    ['C65.9','Malignant neoplasm of unspecified renal pelvis'],
+    ['C79.01','Secondary malignant neoplasm of right kidney, metastasis'],
+    ['C79.02','Secondary malignant neoplasm of left kidney, metastasis'],
+    ['D30.01','Benign neoplasm of right kidney, oncocytoma, AML'],
+    ['D30.02','Benign neoplasm of left kidney'],
+    ['D30.09','Benign neoplasm of unspecified kidney'],
+    ['D41.01','Neoplasm of uncertain behavior, right kidney'],
+    ['D41.02','Neoplasm of uncertain behavior, left kidney'],
+    ['D41.09','Neoplasm of uncertain behavior, unspecified kidney'],
+    ['N13.4','Hydroureter'],
+    ['N13.5','Crossing vessel and stricture of ureter without hydronephrosis'],
+    ['N13.6','Pyonephrosis, infected hydronephrosis'],
+    ['N13.70','Vesicoureteral reflux, VUR, unspecified'],
+    ['N13.71','Vesicoureteral reflux without reflux nephropathy'],
+    ['N13.721','Vesicoureteral reflux with reflux nephropathy, unilateral'],
+    ['N13.729','Vesicoureteral reflux with reflux nephropathy, bilateral'],
+    ['N14.4','Toxic nephropathy NOS'],
+    ['N26.9','Renal sclerosis, unspecified'],
+    ['N28.83','Nephroptosis, floating kidney'],
+    ['C66.1','Malignant neoplasm of right ureter'],
+    ['C66.2','Malignant neoplasm of left ureter'],
+    ['C66.9','Malignant neoplasm of unspecified ureter'],
+    ['D30.21','Benign neoplasm of right ureter'],
+    ['D30.22','Benign neoplasm of left ureter'],
+    ['D41.21','Neoplasm of uncertain behavior, right ureter'],
+    ['D41.22','Neoplasm of uncertain behavior, left ureter'],
+    ['C67.0','Malignant neoplasm of trigone of bladder'],
+    ['C67.1','Malignant neoplasm of dome of bladder'],
+    ['C67.2','Malignant neoplasm of lateral wall of bladder'],
+    ['C67.3','Malignant neoplasm of anterior wall of bladder'],
+    ['C67.4','Malignant neoplasm of posterior wall of bladder'],
+    ['C67.5','Malignant neoplasm of bladder neck'],
+    ['C67.6','Malignant neoplasm of ureteric orifice'],
+    ['C67.7','Malignant neoplasm of urachus'],
+    ['C67.8','Malignant neoplasm of overlapping sites of bladder'],
+    ['C67.9','Malignant neoplasm of bladder, unspecified, urothelial Ca'],
+    ['C79.11','Secondary malignant neoplasm of bladder, metastasis'],
+    ['D09.0','Carcinoma in situ of bladder, CIS'],
+    ['D30.3','Benign neoplasm of bladder'],
+    ['D41.4','Neoplasm of uncertain behavior, bladder'],
+    ['N31.0','Uninhibited neuropathic bladder'],
+    ['N31.2','Flaccid neuropathic bladder'],
+    ['N31.9','Neurogenic bladder, unspecified'],
+    ['N32.0','Bladder neck obstruction, BNO'],
+    ['N32.1','Vesicointestinal fistula'],
+    ['N32.3','Diverticulum of bladder'],
+    ['N32.81','Overactive bladder, OAB'],
+    ['N32.89','Other specified disorders of bladder'],
+    ['R33.9','Retention of urine, unspecified'],
+    ['R33.8','Other retention of urine'],
+    ['R35.89','Other polyuria'],
+    ['N30.11','Interstitial cystitis with hematuria'],
+    ['N30.20','Other chronic cystitis without hematuria'],
+    ['N30.40','Radiation cystitis'],
+    ['N30.80','Other cystitis without hematuria'],
+    ['N30.90','Cystitis, unspecified'],
+    ['N35.014','Post-traumatic urethral stricture, male, unspecified'],
+    ['N35.021','Urethral stricture due to childbirth, female'],
+    ['N35.119','Post-infective urethral stricture NEC, male, unspecified'],
+    ['N35.819','Other urethral stricture, male, unspecified'],
+    ['N35.9','Urethral stricture, unspecified'],
+    ['N34.0','Urethral abscess'],
+    ['N34.1','Nonspecific urethritis, NSU'],
+    ['N34.2','Other urethritis'],
+    ['N36.0','Urethral fistula'],
+    ['N36.1','Urethral diverticulum'],
+    ['N36.42','Intrinsic sphincter deficiency, ISD'],
+    ['N36.9','Urethral disorder, unspecified'],
+    ['C61','Malignant neoplasm of prostate, PCa'],
+    ['C79.82','Secondary malignant neoplasm of genital organs, prostate mets'],
+    ['D07.5','Carcinoma in situ of prostate, PIN III'],
+    ['D40.0','Neoplasm of uncertain behavior of prostate'],
+    ['N40.0','Benign prostatic hyperplasia without LUTS'],
+    ['N40.1','Benign prostatic hyperplasia with LUTS'],
+    ['N40.2','Nodular prostate without LUTS'],
+    ['N40.3','Nodular prostate with LUTS'],
+    ['N41.0','Acute prostatitis'],
+    ['N41.1','Chronic prostatitis'],
+    ['N41.2','Abscess of prostate'],
+    ['N41.4','Granulomatous prostatitis'],
+    ['N41.9','Inflammatory disease of prostate, unspecified'],
+    ['N42.0','Calculus of prostate, prostatic stones'],
+    ['N42.31','Prostatic intraepithelial neoplasia I, PIN I'],
+    ['N42.81','Prostatodynia syndrome, chronic pelvic pain'],
+    ['N42.9','Disorder of prostate, unspecified'],
+    ['C62.11','Malignant neoplasm of right testis'],
+    ['C62.12','Malignant neoplasm of left testis'],
+    ['C62.90','Malignant neoplasm of unspecified testis'],
+    ['N44.00','Torsion of testis, unspecified'],
+    ['N44.02','Intravaginal torsion of spermatic cord, testicular torsion'],
+    ['N45.1','Epididymitis'],
+    ['N45.2','Orchitis'],
+    ['N45.3','Epididymo-orchitis'],
+    ['N46.9','Male infertility, unspecified'],
+    ['N43.3','Hydrocele, unspecified'],
+    ['Q53.10','Undescended testicle, unilateral, cryptorchidism'],
+    ['Q53.20','Undescended testicle, bilateral'],
+    ['C60.9','Malignant neoplasm of penis, unspecified'],
+    ['N47.1','Phimosis, tight foreskin'],
+    ['N47.2','Paraphimosis, retracted foreskin emergency'],
+    ['N48.30','Priapism, unspecified'],
+    ['N48.32','Priapism due to disease classified elsewhere, sickle cell'],
+    ['N48.6','Induration penis plastica, Peyronie disease'],
+    ['B37.41','Candidal cystitis, fungal UTI'],
+    ['Z87.440','Personal history of UTI'],
+    ['N39.3','Stress urinary incontinence'],
+    ['N39.41','Urge incontinence'],
+    ['N39.42','Incontinence without sensory awareness'],
+    ['N39.44','Nocturnal enuresis'],
+    ['N39.46','Mixed incontinence, stress plus urge'],
+    ['R32','Unspecified urinary incontinence'],
+    ['C74.00','Adrenocortical carcinoma, unspecified adrenal gland'],
+    ['C74.01','Adrenocortical carcinoma, right adrenal gland'],
+    ['C74.02','Adrenocortical carcinoma, left adrenal gland'],
+    ['C74.11','Malignant pheochromocytoma, right adrenal gland'],
+    ['C74.12','Malignant pheochromocytoma, left adrenal gland'],
+    ['D35.00','Benign adrenal neoplasm, unspecified, incidentaloma'],
+    ['D35.01','Benign adrenal neoplasm, right adrenal gland'],
+    ['D35.02','Benign adrenal neoplasm, left adrenal gland'],
+    ['D44.10','Neoplasm of uncertain behavior, unspecified adrenal'],
+    ['D44.11','Neoplasm of uncertain behavior, right adrenal gland'],
+    ['D44.12','Neoplasm of uncertain behavior, left adrenal gland'],
+    ['E24.0','Pituitary-dependent Cushing disease'],
+    ['E24.2','Drug-induced Cushing syndrome'],
+    ['E24.9','Cushing syndrome, unspecified'],
+    ['E25.0','Congenital adrenogenital disorders, CAH'],
+    ['E26.01','Conn syndrome, primary hyperaldosteronism, adenoma'],
+    ['E26.02','Glucocorticoid-remediable aldosteronism'],
+    ['E26.09','Other primary hyperaldosteronism'],
+    ['E26.9','Hyperaldosteronism, unspecified'],
+    ['E27.1','Primary adrenocortical insufficiency, Addison disease'],
+    ['E27.40','Unspecified adrenocortical insufficiency'],
+    ['Z85.528','Personal history of malignant neoplasm of kidney'],
+    ['Z85.51','Personal history of malignant neoplasm of bladder'],
+    ['Z85.46','Personal history of malignant neoplasm of prostate'],
+    ['Z85.48','Personal history of malignant neoplasm of testis'],
+    ['Z84.1','Family history of urological disorders'],
+    ['Z87.39','Personal history of other urological disease'],
+    ['Z12.6','Encounter for screening, bladder malignant neoplasm'],
+    ['Z12.5','Encounter for prostate cancer screening, PSA'],
+    ['Z08','Encounter for follow-up after malignant neoplasm treatment'],
+    ['Z09','Encounter for follow-up after non-malignant condition treatment'],
+  ],
+};
+
+var ICDS_FLAT=[];
+Object.keys(ICD_CATS).forEach(function(cat){ICD_CATS[cat].forEach(function(p){ICDS_FLAT.push(p);});});
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+var V='census';
+var MODAL=null;
+var MODAL_SYNC_METHOD='zoho';
+var EDITING_PT=null; // patient id being edited inline
+var QUICK_ROUND=false; // quick round mode
+var CENSUS_Q=''; // census search query // which sync method tab is shown
+var READMIT_PT=null; // patient id being readmitted (shows inline form)
+var TOAST=null,TOAST_T=null;
+var PID=null;
+var EDOS=null;
+var ICDQ_PT=''; // search for patient-level ICD
+
+var ECCODE='',ECDESC='',ECERR='';
+var NPT={name:'',room:'',dob:'',age:'',type:'consult',admitDate:''};
+var SHOW_DISCHARGED=false;
+// ICD editing state (patient-level)
+var ICDQ_PT=''; // search for patient-level ICD
+
+function today(){
+  var d=new Date();
+  var y=d.getFullYear();
+  var m=String(d.getMonth()+1).padStart(2,'0');
+  var day=String(d.getDate()).padStart(2,'0');
+  return y+'-'+m+'-'+day;
+}
+function calcAge(dob){
+  if(!dob)return '';
+  try{var d=new Date(dob+'T12:00'),n=new Date(),a=n.getFullYear()-d.getFullYear(),m=n.getMonth()-d.getMonth();if(m<0||(m===0&&n.getDate()<d.getDate()))a--;return a>=0?String(a):''}catch(e){return '';}
+}
+function fmtD(d){try{return new Date(d+'T12:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}catch(e){return d;}}
+function initials(n){return(n||'').split(' ').map(function(w){return w[0]||'';}).join('').toUpperCase().slice(0,2)||'?';}
+function getPt(id){return DB.patients.find(function(p){return p.id===id;})||null;}
+function selPt(){return getPt(PID);}
+function dosCount(pt){return Object.keys(pt.charges||{}).length;}
+function totalCodes(pt){var n=0;Object.values(pt.charges||{}).forEach(function(c){n+=(c.cpt||[]).length;});return n;}
+
+// ── DOM ──────────────────────────────────────────────────────────────────────
+function h(tag,props,kids){
+  var el=document.createElement(tag);
+  if(props)Object.keys(props).forEach(function(k){
+    var v=props[k];
+    if(k==='cls')el.className=v;
+    else if(k==='html')el.innerHTML=v;
+    else if(k==='style'&&typeof v==='object')Object.assign(el.style,v);
+    else if(k[0]==='@')el.addEventListener(k.slice(1),v);
+    else el.setAttribute(k,v);
+  });
+  if(kids)kids.forEach(function(c){if(c!=null&&c!==false)el.appendChild(typeof c==='string'?document.createTextNode(c):c);});
+  return el;
+}
+
+// ── RENDER ───────────────────────────────────────────────────────────────────
+function render(){
+  var app=document.getElementById('app');
+  app.innerHTML='';
+  app.appendChild(mkTopbar());
+  var page=h('div',{cls:'page'},[]);
+  if(TOAST)page.appendChild(h('div',{cls:'toast '+TOAST.t},[TOAST.m]));
+  if(V==='census') page.appendChild(censusView());
+  if(V==='charge') page.appendChild(chargeView());
+  if(V==='summary')page.appendChild(summaryView());
+  if(V==='analytics')page.appendChild(analyticsView());
+  app.appendChild(page);
+  app.appendChild(mkBottomNav());
+  app.appendChild(mkBackupBanner());
+  if(MODAL){app.appendChild(mkModal());if(MODAL==='add')setTimeout(wireDOBFields,0);}
+}
+// ── BACKUP BANNER & AUTO-BACKUP ──────────────────────────────────────────────
+var isIphoneDevice=/iPhone|iPad|iPod/.test(navigator.userAgent);
+var isWindowsDevice=/Win/.test(navigator.platform||navigator.userAgent);
+
+function getLastBackup(){try{var v=sGet(BK);return v?parseInt(v):null;}catch(e){return null;}}
+function markBackupDone(){try{sSet(BK,String(Date.now()));}catch(e){}}
+function hoursSinceBackup(){var last=getLastBackup();if(!last)return 9999;return(Date.now()-last)/(1000*60*60);}
+
+function mkBackupBanner(){
+  var last=getLastBackup();
+  var hrs=hoursSinceBackup();
+  var hasData=DB.patients.length>0;
+  if(!LS){
+    return h('div',{cls:'banner',style:{background:'var(--red2)',color:'var(--red)',borderTop:'1px solid var(--red3)',fontWeight:'600'}},
+      ['\u26a0 Data not being saved \u2014 go to Summary \u2192 \ud83d\udcbe Backup now']);
+  }
+  if(!hasData||!isWindowsDevice){
+    var last2=getLastBackup();
+    var ago='';
+    if(last2){var h2=hoursSinceBackup();ago=' \u00b7 Last backup: '+(h2<1?'just now':h2<24?Math.round(h2)+'h ago':Math.round(h2/24)+'d ago');}
+    return h('div',{cls:'banner'},['\u2705 Data auto-saved on this device'+ago]);
+  }
+  if(isWindowsDevice&&hrs>24){
+    var lastStr=last?('Last backup '+Math.round(hrs)+'h ago'):'Never backed up';
+    return h('div',{cls:'banner',style:{
+      background:'var(--amber2)',color:'var(--amber)',borderTop:'2px solid var(--amber3)',
+      fontWeight:'600',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'9px 16px',gap:'10px'
+    }},[
+      h('span',{},['\u26a0 '+lastStr+' \u2014 back up now to avoid data loss']),
+      h('button',{style:{background:'var(--amber)',color:'#fff',border:'none',borderRadius:'6px',padding:'5px 12px',fontSize:'12px',fontWeight:'700',cursor:'pointer',fontFamily:'inherit',flexShrink:'0'},'@click':function(){autoBackupNow();}},['\ud83d\udcbe Back up now']),
+    ]);
+  }
+  var ago2='';if(last){var h3=hoursSinceBackup();ago2=' \u00b7 Last backup: '+(h3<1?'just now':h3<24?Math.round(h3)+'h ago':Math.round(h3/24)+'d ago');}
+  return h('div',{cls:'banner'},[
+    '\u2705 Data saved'+ago2+' \u00b7 Auto-backup active on Windows',
+  ]);
+}
+
+function autoBackupNow(){
+  if(!DB.patients.length)return;
+  var exp=JSON.parse(JSON.stringify(DB));
+  exp.patients.forEach(function(p){p.facesheet=null;});
+  var json=JSON.stringify(exp,null,2);
+  var filename='nephro_backup_'+today()+'.json';
+  try{
+    var blob=new Blob([json],{type:'application/json'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');a.href=url;a.download=filename;a.style.display='none';
+    document.body.appendChild(a);a.click();
+    setTimeout(function(){URL.revokeObjectURL(url);document.body.removeChild(a);},1500);
+    markBackupDone();
+    if(!MODAL)render();
+    flash('\u2705 Backup saved: '+filename+' \u2014 move to WorkDrive to sync','green');
+  }catch(e){flash('Backup failed \u2014 try manually from Summary \u2192 \ud83d\udcbe Backup','amber');}
+}
+
+function initAutoBackup(){
+  if(!isWindowsDevice||!DB.patients.length)return;
+  if(hoursSinceBackup()<12)return;
+  setTimeout(function(){
+    autoBackupNow();
+  },4000);
+}
+
+function mkTopbar(){
+  return h('div',{cls:'topbar'},[
+    h('div',{},[h('div',{cls:'brand'},['Nephro Charge Capture']),h('div',{cls:'brand-sub'},[DB.cfg.practice])]),
+    h('div',{cls:'tbar-right'},[h('button',{cls:'icon-btn','@click':function(){clearTimeout(TOAST_T);TOAST=null;MODAL='settings';render();}},['⚙'])]),
+  ]);
+}
+function mkBottomNav(){
+  return h('div',{cls:'bottomnav'},[
+    nb('📋','Patients',V==='census'&&!QUICK_ROUND,function(){if(V!=='census'){V='census';QUICK_ROUND=false;render();}else if(QUICK_ROUND){QUICK_ROUND=false;render();}}),
+    // Centre FAB — Add patient
+    h('button',{
+      cls:'nb',
+      style:{flex:'none',width:'56px',padding:'0',position:'relative',top:'-14px'},
+      '@click':function(){V='census';QUICK_ROUND=false;openAddModal();}
+    },[
+      h('div',{style:{
+        width:'50px',height:'50px',borderRadius:'50%',
+        background:'var(--blue)',color:'#fff',
+        display:'flex',alignItems:'center',justifyContent:'center',
+        fontSize:'28px',fontWeight:'300',lineHeight:'1',
+        boxShadow:'0 3px 10px rgba(37,99,235,.45)',
+      }},['+']),
+    ]),
+    nb('🕐','Summary',V==='summary',function(){V='summary';render();}),
+    nb('📊','Analytics',V==='analytics',function(){V='analytics';render();}),
+  ]);
+}
+function nb(icon,lbl,on,fn){return h('button',{cls:'nb'+(on?' on':''),'@click':fn},[h('div',{cls:'nb-icon'},[icon]),lbl]);}
+
+// ── QUICK ROUND VIEW ─────────────────────────────────────────────────────────
+function quickRoundView(active){
+  var d=today();
+  var f=document.createDocumentFragment();
+
+  // header
+  f.appendChild(h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'14px'}},[
+    h('div',{},[
+      h('div',{style:{fontWeight:'700',fontSize:'16px'}},['⚡ Quick round — '+fmtD(d)]),
+      h('div',{style:{fontSize:'12px',color:'var(--tx2)',marginTop:'2px'}},['CPT and ICD carried from previous DOS. Change below, then tap ✓ Done.']),
+    ]),
+    h('button',{cls:'btn sm','@click':function(){QUICK_ROUND=false;render();}},['✕ Exit']),
+  ]));
+
+  // one card per active patient
+  active.forEach(function(pt){
+    var charges=pt.charges||{};
+    var prevKeys=Object.keys(charges).sort(function(a,b){return b.localeCompare(a);});
+    var prevDC=prevKeys.length?charges[prevKeys[0]]:null;
+
+    // Carry over CPT and ICD from latest DOS
+    var carryCPT=prevDC&&prevDC.cpt&&prevDC.cpt.length?JSON.parse(JSON.stringify(prevDC.cpt)):[];
+    var carryICD=prevDC&&prevDC.icd&&prevDC.icd.length?JSON.parse(JSON.stringify(prevDC.icd)):[];
+
+    // If today's DOS already exists, use it
+    var dc=charges[d];
+    var isNew=!dc;
+    if(!dc){dc={cpt:carryCPT,icd:carryICD,notes:'',_carried:carryCPT.length>0,_icdCarried:carryICD.length>0};}
+
+    var tm=TM[pt.type]||TM.consult;
+
+    // Build the card
+    var card=h('div',{cls:'card',style:{marginBottom:'10px'}},[]);
+
+    // Patient name row
+    card.appendChild(h('div',{style:{display:'flex',alignItems:'center',gap:'10px',marginBottom:'10px'}},[
+      h('div',{cls:'av',style:{background:tm.bg,color:tm.fg,width:'36px',height:'36px',fontSize:'12px'}},[initials(pt.name)]),
+      h('div',{style:{flex:'1'}},[
+        h('div',{style:{fontWeight:'700',fontSize:'14px'}},[
+          pt.name,
+          pt.age?h('span',{style:{fontWeight:'400',fontSize:'12px',color:'var(--tx2)',marginLeft:'6px'}},['Age '+pt.age]):null,
+          pt.room?h('span',{style:{fontWeight:'400',fontSize:'12px',color:'var(--tx2)',marginLeft:'4px'}},['· Rm '+pt.room]):null,
+        ]),
+        h('div',{style:{fontSize:'11px',color:'var(--tx2)',marginTop:'2px'}},[
+          isNew?(prevKeys.length?'New DOS — carried from '+fmtD(prevKeys[0]):'First DOS today'):'DOS already exists for today',
+        ]),
+      ]),
+    ]));
+
+    // CPT dropdown
+    var cptSel=h('select',{cls:'cpt-select',style:{marginBottom:'8px'}});
+    cptSel.appendChild(h('option',{value:''},[dc.cpt&&dc.cpt.length?'+ Change/add CPT':'— Select CPT code —']));
+    CPTS.forEach(function(item){
+      if(item.g){cptSel.appendChild(h('optgroup',{label:item.g},[]));return;}
+      var already=!!(dc.cpt||[]).find(function(x){return x.code===item.code;});
+      if(!already)cptSel.appendChild(h('option',{value:item.code},[item.code+' — '+item.desc]));
+    });
+    cptSel.addEventListener('change',function(){
+      var code=cptSel.value;if(!code)return;
+      var item=CPTS.find(function(x){return x.code===code;});if(!item)return;
+      if(!dc.cpt)dc.cpt=[];
+      dc.cpt.push({code:item.code,desc:item.desc,mod:''});
+      dc._carried=false;
+      cptSel.value='';
+      // re-render chips
+      refreshQRCard(pt.id,d,dc,chipRow,icdRow);
+    });
+    card.appendChild(cptSel);
+
+    // CPT chips (current selection)
+    var chipRow=h('div',{style:{display:'flex',flexWrap:'wrap',gap:'5px',marginBottom:'8px'}},[]);
+    var buildChips=function(){
+      chipRow.innerHTML='';
+      if(!dc.cpt||!dc.cpt.length){
+        chipRow.appendChild(document.createTextNode('No CPT selected'));
+        chipRow.style.color='var(--tx3)';chipRow.style.fontSize='12px';
+      } else {
+        chipRow.style.color='';chipRow.style.fontSize='';
+        dc.cpt.forEach(function(c){
+          var chip=document.createElement('span');
+          chip.className='pill green';chip.style.display='inline-flex';chip.style.alignItems='center';chip.style.gap='4px';
+          chip.innerHTML='<span style="font-weight:800">'+c.code+'</span>'
+            +'<span style="font-size:10px;font-weight:400;opacity:.8"> '+c.desc+'</span>'
+            +'<span style="cursor:pointer;font-size:14px;margin-left:2px;opacity:.6" class="px">×</span>';
+          chip.querySelector('.px').addEventListener('click',function(){
+            dc.cpt=dc.cpt.filter(function(x){return x.code!==c.code;});
+            buildChips();
+          });
+          chipRow.appendChild(chip);
+        });
+      }
+    };
+    buildChips();
+    card.appendChild(chipRow);
+
+    // ICD section
+    var icdLabel=h('div',{style:{fontSize:'11px',fontWeight:'700',color:'var(--tx2)',marginBottom:'5px',textTransform:'uppercase',letterSpacing:'.05em'}},['Diagnoses']);
+    card.appendChild(icdLabel);
+
+    // ICD pills
+    var icdRow=h('div',{style:{display:'flex',flexWrap:'wrap',gap:'4px',marginBottom:'6px'}},[]);
+    var buildICDPills=function(){
+      icdRow.innerHTML='';
+      if(!dc.icd||!dc.icd.length){
+        var none=document.createTextNode('None');icdRow.appendChild(none);
+        icdRow.style.color='var(--tx3)';icdRow.style.fontSize='12px';
+      } else {
+        icdRow.style.color='';icdRow.style.fontSize='';
+        dc.icd.forEach(function(c){
+          var chip=document.createElement('span');
+          chip.className='pill purple';chip.style.display='inline-flex';chip.style.alignItems='center';chip.style.gap='3px';
+          chip.innerHTML='<span style="font-weight:700">'+c.code+'</span>'
+            +'<span style="font-size:9px;font-weight:400;opacity:.75"> '+c.desc+'</span>'
+            +'<span style="cursor:pointer;font-size:13px;margin-left:2px;opacity:.6" class="px">×</span>';
+          chip.querySelector('.px').addEventListener('click',function(){
+            dc.icd=dc.icd.filter(function(x){return x.code!==c.code;});
+            buildICDPills();
+          });
+          icdRow.appendChild(chip);
+        });
+      }
+    };
+    buildICDPills();
+    card.appendChild(icdRow);
+
+    // Searchable ICD picker
+    card.appendChild(mkIcdSearch(
+      '🔍 Search diagnoses (type 2+ chars)…',
+      function(code,desc){
+        if(!dc.icd)dc.icd=[];
+        if(!dc.icd.find(function(x){return x.code===code;})){
+          dc.icd.push({code:code,desc:desc,custom:false});
+          dc._icdCarried=false;
+          buildICDPills();
+        }
+      },
+      function(){return dc.icd||[];}
+    ));
+
+    // Action buttons — Save and Mark Discharged
+    var markDone=function(msg,color){
+      card.style.opacity='0.5';
+      card.style.pointerEvents='none';
+      var savedMsg=document.createElement('div');
+      savedMsg.style.cssText='font-size:13px;font-weight:700;color:'+color+';text-align:center;padding:6px 0';
+      savedMsg.textContent=msg;
+      card.appendChild(savedMsg);
+    };
+
+    card.appendChild(h('div',{style:{display:'flex',gap:'8px',marginTop:'4px',flexWrap:'wrap'}},[
+      h('button',{cls:'btn green',style:{flex:'1',minWidth:'80px',padding:'11px'},'@click':function(){
+        var p2=getPt(pt.id);
+        if(!p2.charges)p2.charges={};
+        p2.charges[d]=dc;
+        save();
+        markDone('✓ Saved for '+fmtD(d),'var(--green)');
+      }},['✓ Save']),
+      h('button',{cls:'btn',style:{flex:'1',minWidth:'80px',padding:'11px',background:'var(--bg2)',color:'var(--tx2)'},'@click':function(){
+        var p2=getPt(pt.id);
+        if(!p2.charges)p2.charges={};
+        p2.charges[d]={cpt:[],icd:[],notes:'',_notSeen:true};
+        save();
+        markDone('⊘ Not seen','var(--tx2)');
+      }},['⊘ Not seen']),
+      h('button',{cls:'btn amber',style:{flex:'1',minWidth:'80px',padding:'11px'},'@click':function(){
+        var p2=getPt(pt.id);
+        if(!p2.charges)p2.charges={};
+        p2.charges[d]=dc;
+        p2.status='discharged';
+        save();
+        markDone('○ Discharged','var(--amber)');
+      }},['○ Discharge']),
+    ]));
+
+    f.appendChild(card);
+  });
+
+  // Done all button
+  f.appendChild(h('button',{cls:'btn blue block',style:{marginTop:'4px'},'@click':function(){
+    QUICK_ROUND=false;render();
+  }},['← Back to census']));
+
+  return h('div',{},[f]);
+}
+
+function refreshQRCard(){}  // placeholder — chips re-render in place
+
+// ── CENSUS ───────────────────────────────────────────────────────────────────
+function censusView(){
+  var allActive=DB.patients.filter(function(p){return p.status==='active';});
+  var allDisc  =DB.patients.filter(function(p){return p.status==='discharged';});
+  var f=document.createDocumentFragment();
+
+  f.appendChild(h('div',{cls:'btn-row',style:{marginBottom:'10px'}},[
+    h('button',{cls:'btn blue','@click':function(){openAddModal();}},['+ Add patient']),
+    allActive.length?h('button',{cls:'btn green','@click':function(){QUICK_ROUND=true;render();}},['⚡ Quick round']):null,
+    h('button',{cls:'btn sm','@click':function(){clearTimeout(TOAST_T);TOAST=null;MODAL='export';render();}},['💾 Export']),
+  ].filter(Boolean)));
+
+  // ── SEARCH BAR ──
+  var srch=h('input',{cls:'inp',id:'_censusSearch',type:'text',placeholder:'🔍 Search patients (3+ letters)…',value:CENSUS_Q,
+    style:{marginBottom:'12px'},
+    '@input':function(e){
+      CENSUS_Q=e.target.value;
+      var pos=e.target.selectionStart; // save cursor position
+      render();
+      // re-focus the rebuilt input and restore cursor
+      var el=document.getElementById('_censusSearch');
+      if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(err){}}
+    }
+  });
+  f.appendChild(srch);
+
+  // ── QUICK ROUND MODE ──
+  if(QUICK_ROUND&&allActive.length){
+    f.appendChild(quickRoundView(allActive));
+    return h('div',{},[f]);
+  }
+
+  // Filter by search query — only activate after 3 chars
+  var q=CENSUS_Q.trim().toLowerCase();
+  var searching=q.length>=3;
+  var active=searching?allActive.filter(function(p){
+    return p.name.toLowerCase().indexOf(q)>=0
+      ||(p.room||'').toLowerCase().indexOf(q)>=0
+      ||(p.age||'').toString().indexOf(q)>=0;
+  }):allActive;
+  var disc=searching?allDisc.filter(function(p){
+    return p.name.toLowerCase().indexOf(q)>=0
+      ||(p.room||'').toLowerCase().indexOf(q)>=0;
+  }):allDisc;
+
+  if(searching){
+    // Search results — show everything matching in one flat list
+    var total=active.length+disc.length;
+    f.appendChild(h('div',{cls:'sec first'},[
+      total+' result'+(total!==1?'s':'')+" matching '"+CENSUS_Q+"'"+'  ',
+      h('button',{style:{fontSize:'11px',color:'var(--blue)',background:'none',border:'none',cursor:'pointer',fontFamily:'inherit',fontWeight:'600'},'@click':function(){CENSUS_Q='';render();}},['Clear ×']),
+    ]));
+    if(!total){
+      f.appendChild(h('div',{style:{fontSize:'13px',color:'var(--tx3)',padding:'12px 0'}},['No patients match "'+CENSUS_Q+'"']));
+    }
+    active.forEach(function(pt){f.appendChild(ptCard(pt));});
+    disc.forEach(function(pt){f.appendChild(ptCard(pt));});
+  } else {
+    // Normal census view
+    f.appendChild(h('div',{cls:'sec first'},['🟢 Active inpatients ('+active.length+')']));
+    if(!active.length){
+      f.appendChild(h('div',{cls:'empty',style:{padding:'24px 20px'}},[
+        h('div',{style:{fontSize:'28px',marginBottom:'8px'}},['🏥']),
+        h('div',{style:{fontSize:'14px'}},['No active inpatients — tap + Add patient']),
+      ]));
+    } else {active.forEach(function(pt){f.appendChild(ptCard(pt));});}
+    f.appendChild(h('div',{cls:'toggle-sec'},[
+      h('div',{cls:'sec',style:{margin:'0'}},['🟡 Discharged ('+allDisc.length+')']),
+      allDisc.length?h('button',{cls:'toggle-btn','@click':function(){SHOW_DISCHARGED=!SHOW_DISCHARGED;render();}},[SHOW_DISCHARGED?'Hide ▲':'Show ▼']):null,
+    ]));
+    if(SHOW_DISCHARGED&&allDisc.length){allDisc.forEach(function(pt){f.appendChild(ptCard(pt));});}
+    if(!allDisc.length)f.appendChild(h('div',{style:{fontSize:'13px',color:'var(--tx3)',marginBottom:'8px'}},['No discharged patients']));
+  }
+
+  return h('div',{},[f]);
+}
+function ptCard(pt){
+  var tm=TM[pt.type]||TM.consult,isActive=pt.status==='active';
+  var icdCount=Object.values(pt.charges||{}).reduce(function(a,dc){return a+(dc.icd||[]).length;},0),dos=dosCount(pt),codes=totalCodes(pt);
+
+  // Today's charge status
+  var todayKey=today();
+  var todayDC=pt.charges&&pt.charges[todayKey];
+  var todayNotSeen=todayDC&&todayDC._notSeen;
+  var hasTodayCPT=todayDC&&!todayNotSeen&&todayDC.cpt&&todayDC.cpt.length>0;
+  var hasTodayICD=todayDC&&!todayNotSeen&&todayDC.icd&&todayDC.icd.length>0;
+  var todayDone=hasTodayCPT&&hasTodayICD;
+  var todayPartial=todayDC&&!todayNotSeen&&(hasTodayCPT||hasTodayICD)&&!todayDone;
+  var todayMissing=isActive&&!todayDC;
+
+  // Left border color
+  var borderColor=!isActive?'var(--bd)':todayNotSeen?'var(--bd2)':todayDone?'var(--green)':todayPartial?'var(--amber)':'var(--red)';
+
+  return h('div',{cls:'card',style:{borderLeft:'4px solid '+borderColor}},[
+    h('div',{style:{display:'flex',alignItems:'center',gap:'12px',cursor:'pointer'},'@click':function(){openCharge(pt);}},[
+      h('div',{cls:'av',style:{background:tm.bg,color:tm.fg}},[initials(pt.name)]),
+      h('div',{style:{flex:'1',minWidth:'0'}},[
+        h('div',{style:{display:'flex',alignItems:'center',gap:'8px',marginBottom:'4px',flexWrap:'wrap'}},[
+          h('span',{style:{fontSize:'15px',fontWeight:'700'}},[pt.name]),
+          pt.age?h('span',{style:{fontSize:'12px',color:'var(--tx2)'}},[' Age '+pt.age]):null,
+          pt.room?h('span',{style:{fontSize:'12px',color:'var(--tx2)'}},[' · Rm '+pt.room]):null,
+          pt.admitDate?h('span',{style:{fontSize:'12px',color:'var(--tx2)'}},[' · Adm '+fmtD(pt.admitDate)]):null,
+        ]),
+        h('div',{style:{display:'flex',gap:'6px',flexWrap:'wrap',alignItems:'center'}},[
+          h('span',{cls:'badge',style:{background:tm.bg,color:tm.fg}},[tm.label]),
+          h('span',{cls:'badge',style:{background:isActive?'var(--green2)':'var(--amber2)',color:isActive?'var(--green)':'var(--amber)',border:'1px solid '+(isActive?'var(--green3)':'var(--amber3)')}},[isActive?'● Active':'○ Discharged']),
+          // Today's charge status badge
+          isActive?h('span',{cls:'badge',style:{
+            background:todayNotSeen?'var(--bg3)':todayDone?'var(--green2)':todayPartial?'var(--amber2)':'var(--red2)',
+            color:todayNotSeen?'var(--tx2)':todayDone?'var(--green)':todayPartial?'var(--amber)':'var(--red)',
+            border:'1px solid '+(todayNotSeen?'var(--bd2)':todayDone?'var(--green3)':todayPartial?'var(--amber3)':'var(--red3)'),
+          }},[todayNotSeen?'⊘ Not seen':todayDone?'✓ Today':todayPartial?'⚡ Incomplete':'✕ No charge today']):null,
+          dos?h('span',{style:{fontSize:'12px',color:'var(--tx2)'}},[dos+' DOS · '+codes+' CPT']):h('span',{style:{fontSize:'12px',color:'var(--tx3)'}},['No charges yet']),
+          pt._ttiGlobal?h('span',{cls:'badge',style:{background:'#fef3c7',color:'#92400e',border:'1px solid #fde68a',fontWeight:'700'}},['⚠ TTI Global']):null,
+        ]),
+      ]),
+      h('div',{style:{fontSize:'18px',color:'var(--tx3)'}},['>']),
+    ]),
+    h('div',{cls:'ptactions'},[
+      h('button',{cls:'btn sm','@click':function(){openCharge(pt);}},[dos?'Edit charges':'Add charges']),
+      h('button',{cls:'btn sm','@click':function(){EDITING_PT=(EDITING_PT===pt.id?null:pt.id);render();}},['✏️ Edit']),
+      h('button',{cls:'btn sm',style:{
+        background:pt._officeFup?'var(--teal2)':'',
+        color:pt._officeFup?'var(--teal)':'',
+        border:pt._officeFup?'1px solid var(--teal3)':'',
+        fontWeight:pt._officeFup?'700':'',
+      },'@click':function(){
+        var p2=getPt(pt.id);if(!p2)return;
+        p2._officeFup=!p2._officeFup;
+        save();render();
+      }},[pt._officeFup?'📋 Office FUP ✓':'📋 Office FUP']),
+      h('button',{cls:'btn sm',style:{
+        background:pt._ttiGlobal?'#fef3c7':'',
+        color:pt._ttiGlobal?'#92400e':'',
+        border:pt._ttiGlobal?'1px solid #fde68a':'',
+        fontWeight:pt._ttiGlobal?'700':'',
+      },'@click':function(){
+        var p2=getPt(pt.id);if(!p2)return;
+        p2._ttiGlobal=!p2._ttiGlobal;
+        save();render();
+      }},[pt._ttiGlobal?'⚠ TTI Global ✓':'TTI Global?']),
+      isActive
+        ?h('button',{cls:'btn sm amber','@click':function(){setPtStatus(pt.id,'discharged');}},[' Mark discharged'])
+        :h('button',{cls:'btn sm teal','@click':function(){READMIT_PT=pt.id;EDITING_PT=null;render();}},[' Readmit']),
+      h('button',{cls:'btn sm red','@click':function(){if(confirm('Remove '+pt.name+' from census? This will delete all their charges and cannot be undone.')){DB.patients=DB.patients.filter(function(p){return p.id!==pt.id;});save();render();}}},['🗑 Remove']),
+    ]),
+    // inline edit form
+    EDITING_PT===pt.id?h('div',{style:{padding:'10px 0',borderTop:'1px solid var(--bd)',marginTop:'8px'}},[
+      h('div',{style:{fontSize:'12px',fontWeight:'700',color:'var(--tx2)',marginBottom:'8px'}},['Edit patient details']),
+      h('div',{style:{display:'flex',gap:'6px',marginBottom:'6px'}},[
+        h('input',{cls:'inp',id:'_eName_'+pt.id,type:'text',value:pt.name,placeholder:'Patient name',style:{flex:'2'}}),
+        h('input',{cls:'inp',id:'_eRoom_'+pt.id,type:'text',value:pt.room||'',placeholder:'Room',style:{flex:'1'}}),
+      ]),
+      h('div',{style:{display:'flex',gap:'6px',marginBottom:'6px'}},[
+        h('input',{cls:'inp',id:'_eAge_'+pt.id,type:'text',inputmode:'numeric',value:pt.age||'',placeholder:'Age',maxlength:'3',style:{flex:'1',textAlign:'center'}}),
+        h('select',{cls:'sel',id:'_eType_'+pt.id,style:{flex:'2'}},
+          Object.keys(TM).map(function(k){var o=h('option',{value:k},[TM[k].label]);if(k===pt.type)o.selected=true;return o;})),
+      ]),
+      // DOB fields
+      h('div',{style:{marginBottom:'8px'}},[
+        h('div',{style:{fontSize:'11px',color:'var(--tx2)',marginBottom:'4px',fontWeight:'600'}},['Date of birth (MM / DD / YYYY)']),
+        h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr 1.6fr',gap:'6px'}},[
+          h('input',{cls:'inp',id:'_eMM_'+pt.id,type:'text',inputmode:'numeric',
+            value:pt.dob?String(parseInt(pt.dob.split('-')[1])):'',
+            placeholder:'MM',maxlength:'2',style:{textAlign:'center'}}),
+          h('input',{cls:'inp',id:'_eDD_'+pt.id,type:'text',inputmode:'numeric',
+            value:pt.dob?String(parseInt(pt.dob.split('-')[2])):'',
+            placeholder:'DD',maxlength:'2',style:{textAlign:'center'}}),
+          h('input',{cls:'inp',id:'_eYY_'+pt.id,type:'text',inputmode:'numeric',
+            value:pt.dob?pt.dob.split('-')[0]:'',
+            placeholder:'YYYY',maxlength:'4',style:{textAlign:'center'}}),
+        ]),
+      ]),
+      // Admission date
+      h('div',{style:{marginBottom:'8px'}},[
+        h('div',{style:{fontSize:'11px',color:'var(--tx2)',marginBottom:'4px',fontWeight:'600'}},['Admission date']),
+        h('input',{cls:'inp',id:'_eAdmit_'+pt.id,type:'date',value:pt.admitDate||''}),
+      ]),
+      h('div',{style:{display:'flex',gap:'6px'}},[
+        h('button',{cls:'btn blue sm','@click':function(){
+          var nameEl=document.getElementById('_eName_'+pt.id);
+          var newName=(nameEl?nameEl.value:'').trim();
+          if(!newName){if(nameEl)nameEl.style.borderColor='red';return;}
+          var p2=getPt(pt.id);
+          if(!p2)return;
+          p2.name=newName;
+          var roomEl=document.getElementById('_eRoom_'+pt.id);
+          if(roomEl)p2.room=roomEl.value.trim();
+          var ageEl=document.getElementById('_eAge_'+pt.id);
+          if(ageEl)p2.age=ageEl.value.trim();
+          var typeEl=document.getElementById('_eType_'+pt.id);
+          if(typeEl)p2.type=typeEl.value;
+          // DOB
+          var mmEl=document.getElementById('_eMM_'+pt.id);
+          var ddEl=document.getElementById('_eDD_'+pt.id);
+          var yyEl=document.getElementById('_eYY_'+pt.id);
+          if(mmEl&&ddEl&&yyEl){
+            var mm=(mmEl.value||'').replace(/\D/g,'');
+            var dd=(ddEl.value||'').replace(/\D/g,'');
+            var yy=(yyEl.value||'').replace(/\D/g,'');
+            if(mm&&dd&&yy&&yy.length===4){
+              p2.dob=yy+'-'+(mm.length===1?'0':'')+mm+'-'+(dd.length===1?'0':'')+dd;
+              if(!p2.age)p2.age=calcAge(p2.dob);
+            } else if(!mm&&!dd&&!yy){
+              p2.dob=''; // cleared
+            }
+          }
+          // Admission date
+          var admitEl=document.getElementById('_eAdmit_'+pt.id);
+          if(admitEl&&admitEl.value)p2.admitDate=admitEl.value;
+          save();EDITING_PT=null;flash('Patient updated');render();
+        }},['Save']),
+        h('button',{cls:'btn sm','@click':function(){EDITING_PT=null;render();}},['Cancel']),
+      ]),
+    ]):null,
+    // inline readmit form
+    READMIT_PT===pt.id?h('div',{style:{padding:'12px 0',borderTop:'2px solid var(--teal)',marginTop:'8px',background:'var(--teal2)',borderRadius:'0 0 var(--r) var(--r)',margin:'8px -1px -1px',padding:'12px'}},[
+      h('div',{style:{fontWeight:'700',color:'var(--teal)',fontSize:'13px',marginBottom:'6px'}},['Readmit — new admission']),
+      h('div',{style:{fontSize:'12px',color:'var(--teal)',marginBottom:'10px'}},
+        ['Previous charges will be cleared. Enter new admission date to continue.']),
+      h('div',{style:{display:'grid',gridTemplateColumns:'2fr 1fr',gap:'8px',alignItems:'end',marginBottom:'10px'}},[
+        h('div',{},[
+          h('div',{style:{fontSize:'11px',color:'var(--teal)',marginBottom:'3px',fontWeight:'600'}},['New admission date']),
+          h('input',{cls:'inp',id:'_readmitDate_'+pt.id,type:'date',value:today(),
+            style:{borderColor:'var(--teal)'}}),
+        ]),
+        h('div',{},[
+          h('div',{style:{fontSize:'11px',color:'var(--teal)',marginBottom:'3px',fontWeight:'600'}},['Room']),
+          h('input',{cls:'inp',id:'_readmitRoom_'+pt.id,type:'text',
+            value:pt.room||'',placeholder:'Room',
+            style:{borderColor:'var(--teal)'}}),
+        ]),
+      ]),
+      h('div',{style:{display:'flex',gap:'8px'}},[
+        h('button',{cls:'btn',style:{flex:'1',background:'var(--teal)',color:'#fff',border:'none'},'@click':function(){
+          var dateEl=document.getElementById('_readmitDate_'+pt.id);
+          var roomEl=document.getElementById('_readmitRoom_'+pt.id);
+          var newDate=(dateEl?dateEl.value:'')||today();
+          var newRoom=roomEl?(roomEl.value||'').trim():p2.room||'';
+          var p2=getPt(pt.id);
+          if(!p2)return;
+          // Keep original patient DISCHARGED with all its charges intact
+          // Create a FRESH patient record for the new admission
+          var newPt={
+            id:Date.now(),
+            name:p2.name,
+            room:newRoom,
+            dob:p2.dob,
+            age:p2.age,
+            type:p2.type,
+            admitDate:newDate,
+            status:'active',
+            facesheet:null,
+            icd:[],
+            charges:{},
+            _officeFup:false,
+            _ttiGlobal:p2._ttiGlobal||false,
+          };
+          // Add new record to top of list — original stays discharged with charges
+          DB.patients.unshift(newPt);
+          save();
+          READMIT_PT=null;
+          flash(p2.name+' readmitted — new record created, previous charges preserved in discharged list');
+          render();
+        }},['✓ Confirm readmission']),
+        h('button',{cls:'btn sm','@click':function(){READMIT_PT=null;render();}},['Cancel']),
+      ]),
+    ]):null,
+  ]);
+}
+
+// ── CHARGE VIEW ──────────────────────────────────────────────────────────────
+function chargeView(){
+  var pt=selPt();if(!pt)return h('div',{},[]);
+  var tm=TM[pt.type]||TM.consult,isActive=pt.status==='active';
+  var f=document.createDocumentFragment();
+
+  f.appendChild(h('button',{cls:'back','@click':function(){V='census';EDOS=null;render();}},[' ← Patients']));
+
+  // patient header
+  f.appendChild(h('div',{cls:'pthdr'},[
+    h('div',{cls:'av',style:{background:tm.bg,color:tm.fg}},[initials(pt.name)]),
+    h('div',{style:{flex:'1'}},[
+      h('div',{style:{fontWeight:'700',fontSize:'16px'}},[
+        pt.name,
+        pt.age?h('span',{style:{fontWeight:'400',fontSize:'13px',color:'var(--tx2)',marginLeft:'8px'}},['Age '+pt.age]):null,
+      ]),
+      h('div',{style:{display:'flex',gap:'6px',marginTop:'4px',flexWrap:'wrap'}},[
+        h('span',{cls:'badge',style:{background:tm.bg,color:tm.fg}},[tm.label]),
+        pt.room?h('span',{style:{fontSize:'12px',color:'var(--tx2)'}},[' Rm '+pt.room]):null,
+        pt.admitDate?h('span',{style:{fontSize:'12px',color:'var(--tx2)'}},['Admitted '+fmtD(pt.admitDate)]):null,
+      ]),
+    ]),
+  ]));
+
+  // status bar
+  f.appendChild(h('div',{cls:'status-bar '+(isActive?'active':'discharged')},[
+    h('div',{},[
+      h('div',{cls:'status-label'},[isActive?'● Active inpatient':'○ Discharged']),
+      h('div',{cls:'status-sub',style:{color:isActive?'var(--green)':'var(--amber)'}},[isActive?'Currently admitted':'No longer inpatient']),
+    ]),
+    isActive
+      ?h('button',{cls:'btn xs amber','@click':function(){setPtStatus(pt.id,'discharged');render();}},[' Mark discharged'])
+      :h('button',{cls:'btn xs teal','@click':function(){
+          var newDate=prompt('New admission date (YYYY-MM-DD):',today());
+          if(newDate===null)return;
+          if(!newDate)newDate=today();
+          var p2=getPt(pt.id);if(!p2)return;
+          // Create fresh record, leave discharged record with its charges
+          var newPt={id:Date.now(),name:p2.name,room:p2.room,dob:p2.dob,age:p2.age,
+            type:p2.type,admitDate:newDate,status:'active',facesheet:null,icd:[],charges:{},
+            _officeFup:false,_ttiGlobal:p2._ttiGlobal||false};
+          DB.patients.unshift(newPt);
+          save();QUICK_ROUND=false;
+          flash(p2.name+' readmitted — previous charges preserved in discharged list');render();
+        }},[' Readmit']),
+  ]));
+
+  // remove patient button
+  f.appendChild(h('div',{style:{display:'flex',justifyContent:'flex-end',marginBottom:'14px'}},[
+    h('button',{cls:'btn sm red','@click':function(){
+      if(confirm('Remove '+pt.name+' from census?\n\nThis will permanently delete all their charges and cannot be undone.')){
+        DB.patients=DB.patients.filter(function(p){return p.id!==pt.id;});
+        save();V='census';PID=null;flash(pt.name+' removed','amber');render();
+      }
+    }},['🗑 Remove patient from census']),
+  ]));
+
+
+  // ── DATES OF SERVICE ──
+  f.appendChild(h('div',{cls:'sec'},['Dates of service']));
+  var charges=pt.charges||{};
+  var dosKeys=Object.keys(charges).sort(function(a,b){return b.localeCompare(a);});
+
+  // ── ADD DATE PANEL ────────────────────────────────────────────────────────
+  var panelICD=[];
+  var panelDateCPT={};   // {date: [{code,desc,mod}]}
+
+  var hasPrevDOS=dosKeys.length>0;
+  var prevCPT0=[];
+  if(hasPrevDOS){var pd0=charges[dosKeys[0]];if(pd0&&pd0.cpt&&pd0.cpt.length)prevCPT0=JSON.parse(JSON.stringify(pd0.cpt));}
+
+  var getDateList=function(from,to){
+    if(!from)return[];if(!to||to<from)to=from;
+    var dates=[],cur=new Date(from+'T12:00'),end=new Date(to+'T12:00'),MAX=31;
+    while(cur<=end&&dates.length<MAX){dates.push(cur.toISOString().slice(0,10));cur.setDate(cur.getDate()+1);}
+    return dates;
+  };
+  var DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var fmtDay=function(d){var dt=new Date(d+'T12:00');return DAYS[dt.getDay()]+' '+fmtD(d);};
+
+  // CPT helpers
+  var mkCPTOpt=function(selEl,defaultLabel){
+    selEl.innerHTML='';
+    var def=document.createElement('option');def.value='';def.text=defaultLabel;selEl.appendChild(def);
+    CPTS.forEach(function(item){
+      if(item.g){var og=document.createElement('optgroup');og.label=item.g;selEl.appendChild(og);return;}
+      var o=document.createElement('option');o.value=item.code;o.text=item.code+' — '+item.desc;selEl.appendChild(o);
+    });
+  };
+
+  var panel=h('div',{style:{background:'var(--bg2)',border:'1px solid var(--bd)',borderRadius:'var(--rs)',padding:'11px 12px',marginBottom:'12px'}},[]);
+  panel.appendChild(h('div',{style:{fontSize:'11px',fontWeight:'700',color:'var(--tx2)',marginBottom:'7px',textTransform:'uppercase',letterSpacing:'.05em'}},['Add date(s) of service']));
+
+  // From / To
+  var fromInp=h('input',{cls:'inp',type:'date',value:today()});
+  var toInp=h('input',{cls:'inp',type:'date',value:today()});
+  panel.appendChild(h('div',{style:{display:'grid',gridTemplateColumns:'1fr auto 1fr',gap:'6px',alignItems:'center',marginBottom:'10px'}},[
+    h('div',{},[h('div',{style:{fontSize:'10px',color:'var(--tx2)',marginBottom:'3px'}},['From']),fromInp]),
+    h('div',{style:{textAlign:'center',color:'var(--tx3)',fontSize:'12px',paddingTop:'16px'}},['→']),
+    h('div',{},[h('div',{style:{fontSize:'10px',color:'var(--tx2)',marginBottom:'3px'}},['To (same for single day)']),toInp]),
+  ]));
+
+  // ── ICD — shared (entered first) ─────────────────────────────────────────
+  panel.appendChild(h('div',{style:{fontSize:'11px',fontWeight:'700',color:'var(--tx2)',marginBottom:'5px'}},
+    ['Diagnoses — same for all dates']));
+  if(hasPrevDOS){
+    var prevICD0=(charges[dosKeys[0]]&&charges[dosKeys[0]].icd)||[];
+    if(prevICD0.length&&!panelICD.length)panelICD=JSON.parse(JSON.stringify(prevICD0));
+  }
+  var pillWrap=h('div',{style:{display:'flex',flexWrap:'wrap',gap:'4px',marginBottom:'6px',minHeight:'22px'}},[]);
+  var buildPanelPills=function(){
+    pillWrap.innerHTML='';
+    if(!panelICD.length){
+      pillWrap.style.color='var(--tx3)';pillWrap.style.fontSize='12px';
+      pillWrap.appendChild(document.createTextNode('None selected'));
+    } else {
+      pillWrap.style.color='';pillWrap.style.fontSize='';
+      panelICD.forEach(function(c){
+        var pill=document.createElement('span');pill.className='pill purple';
+        pill.style.cssText='display:inline-flex;align-items:center;gap:3px;';
+        pill.innerHTML='<b>'+c.code+'</b><span style="font-size:9px;opacity:.75"> '+c.desc+'</span>'
+          +'<span class="px" style="cursor:pointer;font-size:13px;margin-left:2px;opacity:.6">×</span>';
+        pill.querySelector('.px').addEventListener('click',function(){
+          panelICD=panelICD.filter(function(x){return x.code!==c.code;});buildPanelPills();
+        });
+        pillWrap.appendChild(pill);
+      });
+    }
+  };
+  buildPanelPills();
+  panel.appendChild(pillWrap);
+  panel.appendChild(mkIcdSearch('🔍 Search diagnoses (type 2+ chars)…',
+    function(code,desc){
+      if(!panelICD.find(function(x){return x.code===code;})){panelICD.push({code:code,desc:desc,custom:false});buildPanelPills();}
+    },
+    function(){return panelICD;}
+  ));
+
+  // ── INITIAL + SUBSEQUENT CPT SELECTORS ─────────────────────────────────────
+  panel.appendChild(h('div',{style:{fontSize:'11px',fontWeight:'700',color:'var(--tx2)',marginBottom:'6px',marginTop:'10px'}},['CPT codes']));
+
+  var initSel=document.createElement('select');initSel.className='cpt-select';initSel.style.marginBottom='6px';
+  mkCPTOpt(initSel,'Day 1 — Initial CPT (e.g. 99223)');
+  var subsSel=document.createElement('select');subsSel.className='cpt-select';subsSel.style.marginBottom='10px';
+  mkCPTOpt(subsSel,'All other days — Subsequent CPT (e.g. 99233)');
+
+  // Pre-select from previous DOS if available
+  if(prevCPT0.length){
+    Array.from(initSel.options).forEach(function(o){if(o.value===prevCPT0[0].code)o.selected=true;});
+    Array.from(subsSel.options).forEach(function(o){if(o.value===prevCPT0[0].code)o.selected=true;});
+  }
+
+  var applyDefaultsToGrid=function(){buildDateGrid();};
+  initSel.addEventListener('change',applyDefaultsToGrid);
+  subsSel.addEventListener('change',applyDefaultsToGrid);
+  panel.appendChild(initSel);
+  panel.appendChild(subsSel);
+
+  // ── PER-DATE GRID ──────────────────────────────────────────────────────────
+  var dateGrid=document.createElement('div');
+  dateGrid.style.marginBottom='10px';
+  panel.appendChild(dateGrid);
+
+  var buildDateGrid=function(){
+    var dates=getDateList(fromInp.value,toInp.value);
+    var initCode=initSel.value;
+    var subsCode=subsSel.value;
+    dates.forEach(function(d,idx){
+      var code=idx===0?initCode:subsCode;
+      var item=code?CPTS.find(function(x){return x.code===code;}):null;
+      if(!panelDateCPT[d]){panelDateCPT[d]=item?[{code:item.code,desc:item.desc,mod:''}]:[];}
+    });
+    dateGrid.innerHTML='';
+    if(!dates.length)return;
+    dates.forEach(function(d,idx){
+      var dateCPT=panelDateCPT[d]||[];
+      var currentCode=dateCPT.length?dateCPT[0].code:'';
+      var row=document.createElement('div');
+      row.style.cssText='display:flex;align-items:center;gap:8px;margin-bottom:6px;padding:7px 9px;background:var(--bg);border:1px solid var(--bd);border-radius:var(--rs);';
+      var lbl=document.createElement('div');
+      lbl.style.cssText='font-size:11px;font-weight:700;color:var(--tx2);min-width:86px;flex-shrink:0;';
+      lbl.textContent=fmtDay(d);
+      row.appendChild(lbl);
+      var chip=document.createElement('span');
+      chip.style.cssText='flex:1;font-size:12px;font-weight:700;color:'+(currentCode?'var(--green)':'var(--tx3)')+';';
+      chip.textContent=currentCode||'—';
+      row.appendChild(chip);
+      var chgSel=document.createElement('select');
+      chgSel.className='sel';
+      chgSel.style.cssText='font-size:11px;flex-shrink:0;max-width:170px;';
+      var defOpt=document.createElement('option');defOpt.value='';defOpt.text='Change…';chgSel.appendChild(defOpt);
+      CPTS.forEach(function(item){
+        if(item.g){var og=document.createElement('optgroup');og.label=item.g;chgSel.appendChild(og);return;}
+        var o=document.createElement('option');o.value=item.code;o.text=item.code;
+        if(item.code===currentCode){o.selected=true;}
+        chgSel.appendChild(o);
+      });
+      chgSel.addEventListener('change',function(){
+        var code=chgSel.value;if(!code)return;
+        var item=CPTS.find(function(x){return x.code===code;});if(!item)return;
+        // ── CASCADE FORWARD ──
+        var allDates=getDateList(fromInp.value,toInp.value);
+        var fromHere=false;
+        allDates.forEach(function(di){
+          if(di===d)fromHere=true;
+          if(fromHere)panelDateCPT[di]=[{code:item.code,desc:item.desc,mod:''}];
+        });
+        buildDateGrid();
+      });
+      row.appendChild(chgSel);
+      dateGrid.appendChild(row);
+    });
+    if(addBtn)addBtn.textContent='+ Add '+dates.length+' date'+(dates.length!==1?'s':'');
+  };
+
+  fromInp.addEventListener('change',function(){panelDateCPT={};buildDateGrid();});
+  toInp.addEventListener('change',function(){
+    var dates=getDateList(fromInp.value,toInp.value);
+    dates.forEach(function(d,idx){
+      if(!panelDateCPT[d]){
+        var code=idx===0?initSel.value:subsSel.value;
+        var item=code?CPTS.find(function(x){return x.code===code;}):null;
+        panelDateCPT[d]=item?[{code:item.code,desc:item.desc,mod:''}]:[];
+      }
+    });
+    buildDateGrid();
+  });
+
+  // ── ADD BUTTON ─────────────────────────────────────────────────────────────
+  var addBtn=null;
+  var addBtnEl=h('button',{cls:'btn blue block',style:{marginTop:'8px'},'@click':function(){
+    var from=fromInp.value,to=toInp.value;
+    if(!from){flash('Pick a start date','amber');return;}
+    var dates=getDateList(from,to);
+    if(!dates.length){flash('Pick a valid date range','amber');return;}
+    var p2=getPt(pt.id);if(!p2.charges)p2.charges={};
+    var added=0;
+    dates.forEach(function(d){
+      if(!p2.charges[d]){
+        var cpt=panelDateCPT[d]||[];
+        p2.charges[d]={cpt:JSON.parse(JSON.stringify(cpt)),icd:JSON.parse(JSON.stringify(panelICD)),notes:'',_carried:cpt.length>0,_icdCarried:panelICD.length>0};
+        added++;
+      }
+    });
+    save();EDOS=dates[0];
+    flash(added+' date'+(added!==1?'s':'')+' added','blue');
+    render();
+  }},['+ Add dates']);
+  addBtn=addBtnEl;
+  panel.appendChild(addBtnEl);
+  buildDateGrid(); // initial build after addBtn is set
+
+  f.appendChild(panel);
+
+  if(!dosKeys.length){
+    f.appendChild(h('div',{style:{fontSize:'13px',color:'var(--tx3)',padding:'4px 0',marginBottom:'8px'}},['No dates yet — pick a date or range above']));
+  }
+  dosKeys.forEach(function(d){
+    var dc=charges[d];
+    var isEditing=EDOS===d;
+    var hasCodes=dc.cpt&&dc.cpt.length>0;
+    var isNotSeen=!!dc._notSeen;
+
+    var header=h('div',{cls:'dos-header',style:{background:isNotSeen?'var(--bg3)':''},
+      '@click':function(){EDOS=isEditing?null:d;ECCODE='';ECDESC='';ECERR='';render();}},[
+      h('div',{},[
+        h('div',{cls:'dos-date',style:{color:isNotSeen?'var(--tx2)':''}},[
+          fmtD(d),
+          isNotSeen?h('span',{style:{fontSize:'11px',fontWeight:'600',color:'var(--tx2)',marginLeft:'8px',fontFamily:'sans-serif'}},['⊘ Not seen']):null,
+        ]),
+        h('div',{cls:'dos-summary'},[
+          isNotSeen?'Not billed — patient not seen':
+          hasCodes?dc.cpt.map(function(c){return c.code+(c.mod?'-'+c.mod:'');}).join(', '):'No CPT codes yet',
+          !isNotSeen&&dc._carried?' ↩ carried over':'',
+        ]),
+      ]),
+      h('div',{style:{display:'flex',alignItems:'center',gap:'6px'}},[
+        h('button',{cls:'btn xs',style:{flexShrink:'0',background:isNotSeen?'var(--teal2)':'var(--bg2)',color:isNotSeen?'var(--teal)':'var(--tx2)',border:'1px solid '+(isNotSeen?'var(--teal3)':'var(--bd2)')},'@click':function(e){
+          e.stopPropagation();
+          var p2=getPt(pt.id);if(!p2)return;
+          p2.charges[d]._notSeen=!p2.charges[d]._notSeen;
+          save();render();
+        }},[isNotSeen?'Undo':'⊘ Not seen']),
+        !isNotSeen?h('button',{cls:'btn xs',style:{flexShrink:'0',background:'var(--green2)',color:'var(--green)',border:'1px solid var(--green3)'},'@click':function(e){
+          e.stopPropagation();exportDayCSV(d);
+        }},['⬇ CSV']):null,
+        h('button',{cls:'btn xs red',style:{flexShrink:'0'},'@click':function(e){
+          e.stopPropagation();
+          if(confirm('Remove charges for '+fmtD(d)+'?')){
+            var p2=getPt(pt.id);if(p2&&p2.charges)delete p2.charges[d];
+            if(EDOS===d)EDOS=null;save();render();
+          }
+        }},['✕']),
+        h('span',{cls:'dos-chevron'+(isEditing?' open':'')},['⌄']),
+      ].filter(Boolean)),
+    ]);
+    var kids=[header];
+    if(isEditing)kids.push(h('div',{cls:'dos-body'},[dosEditor(pt,d,dc)]));
+    f.appendChild(h('div',{cls:'dos-card'},kids));
+  });
+
+  return h('div',{},[f]);
+}
+
+// ── PATIENT-LEVEL ICD PANEL ──────────────────────────────────────────────────
+// ── REUSABLE SEARCHABLE ICD PICKER ───────────────────────────────────────────
+// onSelect(code, desc) called when user picks a code
+// selectedFn() returns array of {code} already selected (to show ✓)
+function mkIcdSearch(placeholder, onSelect, selectedFn){
+  var wrap=h('div',{style:{position:'relative',marginBottom:'8px'}},[]);
+  var inp=h('input',{cls:'inp',type:'text',placeholder:placeholder||'🔍 Search ICD codes…',
+    autocomplete:'off',style:{width:'100%'}});
+  var drop=h('div',{style:{
+    position:'absolute',top:'100%',left:'0',right:'0',zIndex:'100',
+    background:'var(--bg)',border:'1px solid var(--bd)',borderRadius:'var(--rs)',
+    boxShadow:'0 4px 16px rgba(0,0,0,.12)',maxHeight:'200px',overflowY:'auto',display:'none',
+  }},[]);
+
+  var buildDrop=function(q){
+    drop.innerHTML='';
+    if(!q||q.length<2){drop.style.display='none';return;}
+    var qlo=q.toLowerCase();
+    var matches=ICDS_FLAT.filter(function(p){
+      return p[0].toLowerCase().indexOf(qlo)>=0||p[1].toLowerCase().indexOf(qlo)>=0;
+    }).slice(0,30);
+    if(!matches.length){
+      var none=document.createElement('div');
+      none.style.cssText='padding:9px 12px;font-size:13px;color:var(--tx3)';
+      none.textContent='No matches for "'+q+'"';
+      drop.appendChild(none);
+    } else {
+      matches.forEach(function(pair){
+        var code=pair[0],desc=pair[1];
+        var sel=!!(selectedFn()||[]).find(function(x){return x.code===code;});
+        var row=document.createElement('div');
+        row.style.cssText='padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--bd);'
+          +(sel?'background:var(--green2);':'');
+        row.innerHTML='<span style="font-family:monospace;font-weight:700;font-size:12px;flex-shrink:0;color:'+(sel?'var(--green)':'var(--blue)')+'">'+code+'</span>'
+          +'<span style="font-size:12px;flex:1;color:var(--tx)">'+desc+'</span>'
+          +(sel?'<span style="color:var(--green);font-weight:700;flex-shrink:0">✓</span>':'');
+        row.addEventListener('mousedown',function(e){e.preventDefault();});
+        row.addEventListener('click',function(){
+          onSelect(code,desc);
+          inp.value='';
+          drop.style.display='none';
+          buildDrop('');
+        });
+        // hover
+        row.addEventListener('mouseenter',function(){if(!sel)row.style.background='var(--bg2)';});
+        row.addEventListener('mouseleave',function(){if(!sel)row.style.background='';});
+        drop.appendChild(row);
+      });
+    }
+    drop.style.display='block';
+  };
+
+  inp.addEventListener('input',function(){buildDrop(inp.value.trim());});
+  inp.addEventListener('focus',function(){if(inp.value.trim().length>=2)buildDrop(inp.value.trim());});
+  inp.addEventListener('blur',function(){setTimeout(function(){drop.style.display='none';},150);});
+
+  wrap.appendChild(inp);
+  wrap.appendChild(drop);
+  return wrap;
+}
+
+
+function mkIcdPanel(pt){
+  var icd=pt.icd||[];
+  var f=document.createDocumentFragment();
+
+  f.appendChild(h('div',{cls:'sec'},['Diagnoses (applied to all dates of service)']));
+
+  if(!icd.length){
+    f.appendChild(h('div',{cls:'info-box'},['Set diagnoses once — they apply to every date of service. Only the CPT code changes each day.']));
+  }
+
+  // selected pills
+  if(icd.length){
+    var pills=h('div',{cls:'pills',style:{marginBottom:'10px'}},[]);
+    icd.forEach(function(c){
+      pills.appendChild(h('span',{cls:'pill '+(c.custom?'gdash':'purple')},[
+        c.code,
+        h('span',{style:{fontWeight:'400',fontSize:'10px',marginLeft:'3px',fontFamily:'sans-serif',opacity:'.7'}},[' '+c.desc]),
+        h('span',{cls:'px','@click':function(){togglePtICD(pt.id,c.code,c.desc,c.custom);}},['×']),
+      ]));
+    });
+    f.appendChild(pills);
+  }
+
+  // search bar
+  var qinp=h('input',{cls:'inp',type:'text',placeholder:'Search all diagnoses...',value:ICDQ_PT,
+    style:{marginBottom:'8px'},'@input':function(e){ICDQ_PT=e.target.value;render();}
+  });
+  f.appendChild(qinp);
+
+  if(ICDQ_PT){
+    // filtered flat search view
+    var filtered=ICDS_FLAT.filter(function(pair){
+      return pair[0].toLowerCase().indexOf(ICDQ_PT.toLowerCase())>=0||pair[1].toLowerCase().indexOf(ICDQ_PT.toLowerCase())>=0;
+    });
+    var sbox=h('div',{cls:'listbox'},[]);
+    if(!filtered.length)sbox.appendChild(h('div',{style:{padding:'10px',fontSize:'13px',color:'var(--tx2)'}},['No matches — add custom below']));
+    filtered.slice(0,30).forEach(function(pair){
+      var code=pair[0],desc=pair[1];
+      var sel=!!(pt.icd||[]).find(function(x){return x.code===code;});
+      sbox.appendChild(h('div',{cls:'lrow'+(sel?' on':''),'@click':function(){togglePtICD(pt.id,code,desc,false);}},[
+        h('span',{cls:'lcode'},[code]),h('span',{cls:'ldesc'},[desc]),h('div',{cls:'chk'},[sel?'✓':'']),
+      ]));
+    });
+    f.appendChild(sbox);
+  } else {
+    // Searchable ICD picker
+    f.appendChild(mkIcdSearch(
+      '🔍 Search diagnoses (type 2+ chars)…',
+      function(code,desc){togglePtICD(pt.id,code,desc,false);},
+      function(){return pt.icd||[];}
+    ));
+  }
+
+  // custom ICD
+  var codeInp=h('input',{cls:'inp',type:'text',placeholder:'Code e.g. N05.1',value:ECCODE,
+    style:{width:'110px',flexShrink:'0',fontFamily:'monospace',textTransform:'uppercase'},
+    '@input':function(e){ECCODE=e.target.value.toUpperCase();}
+  });
+  var descInp=h('input',{cls:'inp',type:'text',placeholder:'Diagnosis description',value:ECDESC,
+    style:{flex:'1'},'@input':function(e){ECDESC=e.target.value;}
+  });
+  f.appendChild(h('div',{cls:'custom-icd',style:{marginTop:'10px'}},[
+    h('div',{style:{fontSize:'12px',fontWeight:'700',color:'var(--tx2)',marginBottom:'9px'}},['+ Custom diagnosis']),
+    h('div',{style:{display:'flex',gap:'7px',marginBottom:'8px'}},[codeInp,descInp]),
+    ECERR?h('div',{style:{fontSize:'12px',color:'var(--red)',marginBottom:'8px'}},[ECERR]):null,
+    h('button',{cls:'btn blue sm','@click':function(){addCustomPtICD(pt.id);}},['Add diagnosis']),
+  ]));
+
+  return h('div',{},[f]);
+}
+
+// ── DOS EDITOR (CPT only) ────────────────────────────────────────────────────
+function dosEditor(pt,d,dc){
+  var f=document.createDocumentFragment();
+
+  // ── ICD-10 for this date of service ──
+  f.appendChild(h('div',{cls:'sec',style:{marginTop:'0'}},['Diagnoses for '+fmtD(d)]));
+
+  // Selected ICD pills with remove
+  var dosIcd=dc.icd||[];
+  if(dosIcd.length){
+    var icdPills=h('div',{style:{background:'var(--purple2)',border:'1px solid var(--purple3)',borderRadius:'var(--rs)',padding:'10px 12px',marginBottom:'10px'}},[
+      h('div',{style:{fontSize:'11px',fontWeight:'700',color:'var(--purple)',marginBottom:'7px',textTransform:'uppercase',letterSpacing:'.05em'}},[
+        dc._icdCarried?'↩ Diagnoses carried from previous date — change if needed':'✓ Diagnoses for this date',
+      ]),
+      h('div',{style:{display:'flex',flexWrap:'wrap',gap:'5px'}},
+        dosIcd.map(function(c){
+          return h('span',{cls:'pill purple',style:{display:'inline-flex',alignItems:'center',gap:'4px'}},[
+            c.code,
+            h('span',{style:{fontWeight:'400',fontSize:'10px',fontFamily:'sans-serif',marginLeft:'2px',opacity:'.8'}},[c.desc]),
+            h('span',{cls:'px','@click':function(){toggleDOSICD(pt.id,d,c.code,c.desc,c.custom);}},['×']),
+          ]);
+        })
+      ),
+    ]);
+    f.appendChild(icdPills);
+  } else {
+    f.appendChild(h('div',{style:{background:'var(--bg2)',border:'1px dashed var(--bd2)',borderRadius:'var(--rs)',padding:'8px 12px',marginBottom:'10px',fontSize:'13px',color:'var(--tx3)',textAlign:'center'}},
+      ['No diagnoses yet — select from dropdowns below']));
+  }
+
+  // Searchable ICD picker for this DOS
+  f.appendChild(mkIcdSearch(
+    '🔍 Search diagnoses (type 2+ chars)…',
+    function(code,desc){
+      if(!dc.icd)dc.icd=[];
+      if(!dc.icd.find(function(x){return x.code===code;})){
+        dc.icd.push({code:code,desc:desc,custom:false});
+        dc._icdCarried=false;
+        saveDOS(pt.id,d,dc);
+      }
+      render();
+    },
+    function(){return dc.icd||[];}
+  ));
+
+  // Custom ICD for this DOS
+  f.appendChild(h('div',{cls:'custom-icd',style:{marginBottom:'12px'}},[
+    h('div',{style:{fontSize:'12px',fontWeight:'700',color:'var(--tx2)',marginBottom:'7px'}},['+ Custom diagnosis for this date']),
+    h('div',{style:{display:'flex',gap:'7px',marginBottom:'6px'}},[
+      h('input',{cls:'inp',id:'_dosCode_'+d,type:'text',placeholder:'Code',style:{width:'100px',flexShrink:'0',fontFamily:'monospace',textTransform:'uppercase'}}),
+      h('input',{cls:'inp',id:'_dosDesc_'+d,type:'text',placeholder:'Description',style:{flex:'1'}}),
+    ]),
+    h('button',{cls:'btn blue sm','@click':function(){
+      var cEl=document.getElementById('_dosCode_'+d);
+      var dEl=document.getElementById('_dosDesc_'+d);
+      var code=(cEl?cEl.value:'').trim().toUpperCase();
+      var desc=(dEl?dEl.value:'').trim();
+      if(!code||!desc){flash('Enter code and description','amber');return;}
+      if(!dc.icd)dc.icd=[];
+      if(dc.icd.find(function(x){return x.code===code;})){flash('Already added','amber');return;}
+      dc.icd.push({code:code,desc:desc,custom:true});
+      saveDOS(pt.id,d,dc);
+      if(cEl)cEl.value='';if(dEl)dEl.value='';
+      render();
+    }},['Add']),
+  ]));
+
+  // CPT codes — dropdown
+  f.appendChild(h('div',{cls:'sec',style:{marginTop:'0'}},['CPT codes for '+fmtD(d)]));
+
+  // ── SELECTED CPT CHIPS — shown prominently so carried-over codes are visible ──
+  if(dc.cpt&&dc.cpt.length){
+    var chipBox=h('div',{style:{
+      background:'var(--green2)',border:'1px solid var(--green3)',
+      borderRadius:'var(--rs)',padding:'10px 12px',marginBottom:'10px'
+    }},[
+      h('div',{style:{fontSize:'11px',fontWeight:'700',color:'var(--green)',marginBottom:'7px',textTransform:'uppercase',letterSpacing:'.05em'}},[
+        dc._carried?'↩ Carried over from previous visit — change below if needed':'✓ Selected for this date',
+      ]),
+      h('div',{style:{display:'flex',flexWrap:'wrap',gap:'6px'}},
+        dc.cpt.map(function(c){
+          return h('div',{style:{
+            display:'inline-flex',alignItems:'center',gap:'6px',
+            background:'var(--bg)',border:'2px solid var(--green3)',
+            borderRadius:'8px',padding:'6px 10px',
+          }},[
+            h('span',{style:{fontFamily:'monospace',fontSize:'13px',fontWeight:'800',color:'var(--green)'}},[c.code]),
+            h('span',{style:{fontSize:'12px',color:'var(--tx2)'}},[c.desc]),
+            c.mod?h('span',{cls:'pill blue',style:{fontSize:'10px'}},[c.mod]):null,
+            h('button',{style:{
+              background:'var(--red2)',border:'1px solid var(--red3)',
+              borderRadius:'4px',cursor:'pointer',padding:'1px 5px',
+              fontSize:'12px',color:'var(--red)',fontFamily:'inherit',marginLeft:'2px',
+            },'@click':function(){toggleDOSCPT(pt.id,d,c.code,c.desc);}},['✕']),
+          ]);
+        })
+      ),
+    ]);
+    f.appendChild(chipBox);
+  } else {
+    f.appendChild(h('div',{style:{
+      background:'var(--bg2)',border:'1px dashed var(--bd2)',
+      borderRadius:'var(--rs)',padding:'10px 12px',marginBottom:'10px',
+      fontSize:'13px',color:'var(--tx3)',textAlign:'center',
+    }},['No CPT code selected yet — pick one below']));
+  }
+
+  // ── CPT DROPDOWN — for adding / changing ──
+  var selEl=h('select',{cls:'cpt-select'},[]);
+  var defOpt=h('option',{value:''},[dc.cpt&&dc.cpt.length?' + Add or change CPT code…':' — Select a CPT code — ']);
+  selEl.appendChild(defOpt);
+  CPTS.forEach(function(item){
+    if(item.g){
+      selEl.appendChild(h('optgroup',{label:item.g},[]));
+    } else {
+      var already=!!(dc.cpt||[]).find(function(x){return x.code===item.code;});
+      if(!already){
+        selEl.appendChild(h('option',{value:item.code},[item.code+' — '+item.desc]));
+      }
+    }
+  });
+  selEl.addEventListener('change',function(){
+    var code=selEl.value;
+    if(!code)return;
+    var item=CPTS.find(function(x){return x.code===code;});
+    if(!item)return;
+    if(!dc.cpt)dc.cpt=[];
+    dc.cpt.push({code:item.code,desc:item.desc,mod:''});
+    dc._carried=false;
+    saveDOS(pt.id,d,dc);
+    selEl.value='';
+    render();
+  });
+
+  f.appendChild(h('div',{style:{background:'var(--bg2)',border:'1px solid var(--bd)',borderRadius:'var(--rs)',padding:'10px 12px',marginBottom:'10px'}},[
+    selEl,
+  ]));
+
+  // modifiers for selected CPT
+  if(dc.cpt&&dc.cpt.length){
+    f.appendChild(h('div',{cls:'sec'},['Modifiers']));
+    dc.cpt.forEach(function(c){
+      var opts=MODS.map(function(m){var o=h('option',{value:m[0]},[m[1]]);if(m[0]===(c.mod||''))o.selected=true;return o;});
+      var msel=h('select',{cls:'modsel','@change':function(e){c.mod=e.target.value;saveDOS(pt.id,d,dc);}},opts);
+      f.appendChild(h('div',{cls:'modcard'},[
+        h('div',{style:{display:'flex',alignItems:'center',gap:'8px'}},[
+          h('span',{style:{fontFamily:'monospace',fontSize:'14px',fontWeight:'700',color:'var(--blue)'}},[c.code]),
+          h('span',{style:{fontSize:'13px',color:'var(--tx2)',flex:'1'}},[c.desc]),
+          h('button',{style:{background:'none',border:'none',cursor:'pointer',fontSize:'22px',color:'var(--tx2)',padding:'0 3px',lineHeight:'1',fontFamily:'inherit'},'@click':function(){toggleDOSCPT(pt.id,d,c.code,c.desc);}},['×']),
+        ]),
+        h('div',{cls:'modrow'},[
+          h('span',{style:{fontSize:'12px',color:'var(--tx2)',flexShrink:'0'}},['Modifier:']),
+          msel,
+          c.mod?h('span',{cls:'pill blue',style:{marginLeft:'4px'}},[c.mod]):null,
+        ]),
+      ]));
+    });
+  }
+
+
+  f.appendChild(h('button',{cls:'btn green block','@click':function(){
+    dc._carried=false; // clear the carried-over indicator once user saves
+    flash('Charges saved for '+fmtD(d));
+  }},[' ✓ Charges saved for '+fmtD(d)]));
+
+  return h('div',{},[f]);
+}
+
+// ── SUMMARY ──────────────────────────────────────────────────────────────────
+function analyticsView(){
+  var f=document.createDocumentFragment();
+
+  // ── DATE RANGE STATE ──────────────────────────────────────────────────────
+  if(!window._aRange)window._aRange='month'; // month|last|q3|year|all
+  var range=window._aRange;
+
+  // Compute from/to for the range
+  var now=new Date();
+  var y=now.getFullYear(),m=now.getMonth()+1;
+  var toStr=today();
+  var fromStr='';
+  if(range==='month'){
+    fromStr=y+'-'+(m<10?'0':'')+m+'-01';
+  } else if(range==='last'){
+    var lm=m===1?12:m-1,ly=m===1?y-1:y;
+    var ld=new Date(ly,lm,0).getDate();
+    fromStr=ly+'-'+(lm<10?'0':'')+lm+'-01';
+    toStr=ly+'-'+(lm<10?'0':'')+lm+'-'+(ld<10?'0':'')+ld;
+  } else if(range==='q3'){
+    var d3=new Date(now);d3.setMonth(d3.getMonth()-3);
+    var y3=d3.getFullYear(),m3=d3.getMonth()+1;
+    fromStr=y3+'-'+(m3<10?'0':'')+m3+'-01';
+  } else if(range==='year'){
+    fromStr=y+'-01-01';
+  } else {
+    fromStr='2000-01-01'; // all time
+  }
+
+  // ── COMPUTE STATS ─────────────────────────────────────────────────────────
+  var cptCount={},icdCount={},monthPts={},monthDOS={};
+  var totalPtSet=new Set(),totalDOS=0,notSeenDOS=0,ttiCount=0,fupCount=0;
+  var longestStay=0,longestName='',totalStayDays=0,dischargedWithAdmit=0;
+  var newConsults=0;
+
+  DB.patients.forEach(function(pt){
+    if(pt._ttiGlobal)ttiCount++;
+    if(pt._officeFup)fupCount++;
+
+    // Length of stay for discharged patients
+    if(pt.status==='discharged'&&pt.admitDate){
+      var dosKeys2=Object.keys(pt.charges||{}).sort();
+      if(dosKeys2.length){
+        var lastDOS=dosKeys2[dosKeys2.length-1];
+        var ms=(new Date(lastDOS+'T12:00'))-(new Date(pt.admitDate+'T12:00'));
+        var days=Math.round(ms/86400000)+1;
+        if(days>0){
+          totalStayDays+=days;dischargedWithAdmit++;
+          if(days>longestStay){longestStay=days;longestName=pt.name.split(',')[0];}
+        }
+      }
+    }
+
+    // Charges in date range
+    Object.keys(pt.charges||{}).forEach(function(dos){
+      if(dos<fromStr||dos>toStr)return;
+      var dc=pt.charges[dos];
+      totalPtSet.add(pt.id);
+      totalDOS++;
+      if(dc._notSeen){notSeenDOS++;return;}
+
+      // Track first DOS (new consult detection)
+      var allKeys=Object.keys(pt.charges||{}).sort();
+      if(allKeys[0]===dos)newConsults++;
+
+      // Monthly buckets
+      var mon=dos.slice(0,7);
+      if(!monthPts[mon])monthPts[mon]=new Set();
+      if(!monthDOS[mon])monthDOS[mon]=0;
+      monthPts[mon].add(pt.id);
+      monthDOS[mon]++;
+
+      (dc.cpt||[]).forEach(function(c){
+        if(!c.code)return;
+        cptCount[c.code]=cptCount[c.code]||{code:c.code,desc:c.desc,n:0};
+        cptCount[c.code].n++;
+      });
+      (dc.icd||[]).concat(pt.icd||[]).forEach(function(c){
+        if(!c.code)return;
+        icdCount[c.code]=icdCount[c.code]||{code:c.code,desc:c.desc,n:0};
+        icdCount[c.code].n++;
+      });
+    });
+  });
+
+  var totalPts=totalPtSet.size;
+  var avgStay=dischargedWithAdmit?Math.round(totalStayDays/dischargedWithAdmit):0;
+  var cptList=Object.values(cptCount).sort(function(a,b){return b.n-a.n;});
+  var icdList=Object.values(icdCount).sort(function(a,b){return b.n-a.n;}).slice(0,10);
+
+  // Monthly chart data (last 6 months or range months)
+  var chartMonths=Object.keys(monthPts).sort().slice(-6);
+  var maxPts=Math.max.apply(null,chartMonths.map(function(m){return monthPts[m].size||0;}))||1;
+
+  // ── UI HELPERS ────────────────────────────────────────────────────────────
+  function stat(val,label,sub){
+    return h('div',{style:{
+      background:'var(--bg2)',border:'1px solid var(--bd)',borderRadius:'var(--rs)',
+      padding:'12px',textAlign:'center',flex:'1',minWidth:'80px',
+    }},[
+      h('div',{style:{fontSize:'24px',fontWeight:'800',color:'var(--blue)',lineHeight:'1.1'}},[String(val)]),
+      h('div',{style:{fontSize:'11px',fontWeight:'600',color:'var(--tx)',marginTop:'3px'}},[label]),
+      sub?h('div',{style:{fontSize:'10px',color:'var(--tx3)',marginTop:'2px'}},[sub]):null,
+    ]);
+  }
+
+  function sec(title){
+    return h('div',{style:{fontSize:'11px',fontWeight:'700',color:'var(--tx2)',
+      textTransform:'uppercase',letterSpacing:'.06em',margin:'18px 0 8px'}},[title]);
+  }
+
+  // ── BUILD UI ──────────────────────────────────────────────────────────────
+  f.appendChild(h('div',{style:{fontSize:'17px',fontWeight:'800',marginBottom:'12px'}},[
+    '📊 Analytics',
+  ]));
+
+  // Range tabs
+  var ranges=[
+    {k:'month',l:'This month'},
+    {k:'last', l:'Last month'},
+    {k:'q3',   l:'Last 3 mo'},
+    {k:'year', l:'This year'},
+    {k:'all',  l:'All time'},
+  ];
+  f.appendChild(h('div',{style:{display:'flex',gap:'5px',flexWrap:'wrap',marginBottom:'14px'}},
+    ranges.map(function(r){
+      return h('button',{
+        cls:'btn sm'+(range===r.k?' blue':''),
+        style:{fontSize:'11px'},
+        '@click':function(){window._aRange=r.k;render();}
+      },[r.l]);
+    })
+  ));
+
+  // Key stats row
+  var rangeLabel=range==='month'?'this month':range==='last'?'last month':range==='q3'?'last 3 months':range==='year'?'this year':'all time';
+  f.appendChild(h('div',{style:{display:'flex',gap:'8px',flexWrap:'wrap',marginBottom:'4px'}},[
+    stat(totalPts,'Patients',rangeLabel),
+    stat(totalDOS,'Dates of service',rangeLabel),
+    stat(notSeenDOS,'Not seen',rangeLabel),
+  ]));
+  f.appendChild(h('div',{style:{display:'flex',gap:'8px',flexWrap:'wrap',marginBottom:'4px',marginTop:'8px'}},[
+    stat(cptList.reduce(function(s,c){return s+c.n;},0),'Total CPT codes',rangeLabel),
+    stat(avgStay>0?avgStay+'d':'—','Avg stay',dischargedWithAdmit+' discharged'),
+    stat(ttiCount,'TTI Global','total flagged'),
+  ]));
+
+  // Monthly patient volume chart
+  if(chartMonths.length>0){
+    f.appendChild(sec('Monthly patient volume'));
+    f.appendChild(h('div',{style:{background:'var(--bg2)',border:'1px solid var(--bd)',borderRadius:'var(--rs)',padding:'10px 12px'}},[
+      h('div',{},chartMonths.map(function(mon){
+        var pts=monthPts[mon]?monthPts[mon].size:0;
+        var dos=monthDOS[mon]||0;
+        var pct=Math.round((pts/maxPts)*100);
+        var label=mon.slice(0,7);
+        var d=new Date(mon+'-15');
+        var mname=d.toLocaleString('default',{month:'short',year:'2-digit'});
+        return h('div',{style:{display:'flex',alignItems:'center',gap:'8px',marginBottom:'6px'}},[
+          h('div',{style:{fontSize:'11px',color:'var(--tx2)',width:'48px',flexShrink:'0',textAlign:'right'}},[mname]),
+          h('div',{style:{flex:'1',height:'18px',background:'var(--bd)',borderRadius:'3px',overflow:'hidden'}},[
+            h('div',{style:{
+              height:'100%',width:pct+'%',background:'var(--blue)',
+              borderRadius:'3px',transition:'width .3s',minWidth:pts>0?'18px':'0',
+              display:'flex',alignItems:'center',justifyContent:'flex-end',paddingRight:'4px',
+            }},[pts>0?h('span',{style:{fontSize:'10px',color:'#fff',fontWeight:'700'}},[String(pts)]):null]),
+          ]),
+          h('div',{style:{fontSize:'11px',color:'var(--tx3)',width:'36px',flexShrink:'0'}},[dos+' DOS']),
+        ]);
+      })),
+    ]));
+  }
+
+  // CPT breakdown table
+  if(cptList.length>0){
+    f.appendChild(sec('CPT code breakdown'));
+    var maxCPT=cptList[0].n||1;
+    f.appendChild(h('div',{style:{background:'var(--bg2)',border:'1px solid var(--bd)',borderRadius:'var(--rs)',overflow:'hidden'}},[
+      h('table',{style:{width:'100%',borderCollapse:'collapse'}},[ 
+        h('thead',{},[
+          h('tr',{style:{background:'var(--bg3)',fontSize:'11px',color:'var(--tx2)',fontWeight:'700'}},[ 
+            h('th',{style:{padding:'7px 10px',textAlign:'left'}},['CPT']),
+            h('th',{style:{padding:'7px 10px',textAlign:'left'}},['Description']),
+            h('th',{style:{padding:'7px 10px',textAlign:'right'}},['Count']),
+            h('th',{style:{padding:'7px 10px',width:'80px'}},['Bar']),
+          ]),
+        ]),
+        h('tbody',{},cptList.map(function(c,i){
+          var pct=Math.round((c.n/maxCPT)*100);
+          return h('tr',{style:{borderTop:'1px solid var(--bd)',background:i%2?'var(--bg2)':'var(--bg)'}},[
+            h('td',{style:{padding:'7px 10px',fontFamily:'monospace',fontWeight:'700',fontSize:'12px',color:'var(--blue)',whiteSpace:'nowrap'}},[c.code]),
+            h('td',{style:{padding:'7px 10px',fontSize:'12px',color:'var(--tx)'}},[c.desc||'']),
+            h('td',{style:{padding:'7px 10px',textAlign:'right',fontWeight:'700',fontSize:'13px',color:'var(--tx)'}},[String(c.n)]),
+            h('td',{style:{padding:'7px 10px'}},[
+              h('div',{style:{height:'10px',background:'var(--bd)',borderRadius:'3px',overflow:'hidden'}},[
+                h('div',{style:{height:'100%',width:pct+'%',background:'var(--green)',borderRadius:'3px'}},[]),
+              ]),
+            ]),
+          ]);
+        })),
+      ]),
+    ]));
+  } else {
+    f.appendChild(sec('CPT code breakdown'));
+    f.appendChild(h('div',{style:{color:'var(--tx3)',fontSize:'13px',padding:'10px 0'}},[
+      'No charges recorded '+rangeLabel+'.']));
+  }
+
+  // Top 10 ICD-10 diagnoses
+  if(icdList.length>0){
+    f.appendChild(sec('Top diagnoses (ICD-10)'));
+    var maxICD=icdList[0].n||1;
+    f.appendChild(h('div',{style:{background:'var(--bg2)',border:'1px solid var(--bd)',borderRadius:'var(--rs)',overflow:'hidden'}},[
+      h('table',{style:{width:'100%',borderCollapse:'collapse'}},[
+        h('thead',{},[
+          h('tr',{style:{background:'var(--bg3)',fontSize:'11px',color:'var(--tx2)',fontWeight:'700'}},[
+            h('th',{style:{padding:'7px 10px',textAlign:'left'}},['ICD-10']),
+            h('th',{style:{padding:'7px 10px',textAlign:'left'}},['Description']),
+            h('th',{style:{padding:'7px 10px',textAlign:'right'}},['Count']),
+          ]),
+        ]),
+        h('tbody',{},icdList.map(function(c,i){
+          return h('tr',{style:{borderTop:'1px solid var(--bd)',background:i%2?'var(--bg2)':'var(--bg)'}},[
+            h('td',{style:{padding:'7px 10px',fontFamily:'monospace',fontWeight:'700',fontSize:'12px',color:'var(--purple)',whiteSpace:'nowrap'}},[c.code]),
+            h('td',{style:{padding:'7px 10px',fontSize:'12px',color:'var(--tx)'}},[c.desc||'']),
+            h('td',{style:{padding:'7px 10px',textAlign:'right',fontWeight:'700',fontSize:'13px',color:'var(--tx)'}},[
+              h('div',{style:{display:'flex',alignItems:'center',gap:'6px',justifyContent:'flex-end'}},[
+                h('div',{style:{width:'50px',height:'8px',background:'var(--bd)',borderRadius:'3px',overflow:'hidden',flexShrink:'0'}},[
+                  h('div',{style:{height:'100%',width:Math.round((c.n/maxICD)*100)+'%',background:'var(--purple)',borderRadius:'3px'}},[]),
+                ]),
+                h('span',{},[String(c.n)]),
+              ]),
+            ]),
+          ]);
+        })),
+      ]),
+    ]));
+  }
+
+  // Additional insights row
+  f.appendChild(sec('Additional insights'));
+  f.appendChild(h('div',{style:{display:'flex',gap:'8px',flexWrap:'wrap'}},[
+    stat(DB.patients.filter(function(p){return p.status==='active';}).length,'Active patients','current census'),
+    stat(DB.patients.filter(function(p){return p.status==='discharged';}).length,'Discharged','all time'),
+    stat(fupCount,'Office FUP','flagged'),
+  ]));
+  if(longestStay>0){
+    f.appendChild(h('div',{style:{
+      marginTop:'8px',background:'var(--blue2)',border:'1px solid var(--blue3)',
+      borderRadius:'var(--rs)',padding:'10px 12px',fontSize:'12px',color:'var(--blue)',
+    }},[
+      '🏆 Longest stay: '+longestStay+' days — '+longestName,
+      avgStay?' · Average stay: '+avgStay+' days':'',
+    ]));
+  }
+
+  // Export analytics
+  f.appendChild(h('button',{cls:'btn block',style:{marginTop:'16px'},'@click':function(){
+    var lines=['Nephrology Practice Analytics'];
+    lines.push('Range: '+rangeLabel+' ('+fromStr+' to '+toStr+')');
+    lines.push('Generated: '+fmtD(today()));
+    lines.push('');
+    lines.push('OVERVIEW');
+    lines.push('Patients seen: '+totalPts);
+    lines.push('Dates of service: '+totalDOS);
+    lines.push('Not seen: '+notSeenDOS);
+    lines.push('Total CPT codes billed: '+cptList.reduce(function(s,c){return s+c.n;},0));
+    lines.push('');
+    lines.push('CPT CODE BREAKDOWN');
+    cptList.forEach(function(c){lines.push(c.code+'\t'+c.n+'\t'+c.desc);});
+    lines.push('');
+    lines.push('TOP DIAGNOSES');
+    icdList.forEach(function(c){lines.push(c.code+'\t'+c.n+'\t'+c.desc);});
+    lines.push('');
+    lines.push('MONTHLY VOLUME');
+    chartMonths.forEach(function(mon){
+      var d2=new Date(mon+'-15');
+      var ml=d2.toLocaleString('default',{month:'long',year:'numeric'});
+      lines.push(ml+'\t'+(monthPts[mon]?monthPts[mon].size:0)+' patients\t'+(monthDOS[mon]||0)+' DOS');
+    });
+    dlText(lines.join('\n'),'analytics_'+today()+'.txt','text/plain');
+    flash('Analytics exported');
+  }},['⬇ Export analytics as text file']));
+
+  var wrap=h('div',{style:{padding:'0 0 24px'}},[]);
+  wrap.appendChild(f);
+  return wrap;
+}
+
+function summaryView(){
+  var active=DB.patients.filter(function(p){return p.status==='active';});
+  var totalPts=DB.patients.length,totalCPT=DB.patients.reduce(function(a,p){return a+totalCodes(p);},0);
+  var f=document.createDocumentFragment();
+  f.appendChild(h('div',{cls:'sec first'},['Overview']));
+  f.appendChild(h('div',{cls:'stats'},[
+    h('div',{cls:'stat'},[h('div',{cls:'stat-n'},[String(totalPts)]),h('div',{cls:'stat-l'},['Patients'])]),
+    h('div',{cls:'stat'},[h('div',{cls:'stat-n'},[String(active.length)]),h('div',{cls:'stat-l'},['Active'])]),
+    h('div',{cls:'stat'},[h('div',{cls:'stat-n'},[String(totalCPT)]),h('div',{cls:'stat-l'},['CPT codes'])]),
+  ]));
+
+  // Office FUP section
+  var fupPts=DB.patients.filter(function(p){return p._officeFup;});
+  if(fupPts.length){
+    f.appendChild(h('div',{style:{
+      background:'var(--teal2)',border:'1px solid var(--teal3)',
+      borderRadius:'var(--rs)',padding:'11px 13px',marginBottom:'12px',
+      display:'flex',alignItems:'center',justifyContent:'space-between',gap:'10px',
+    }},[
+      h('div',{},[
+        h('div',{style:{fontWeight:'700',color:'var(--teal)',fontSize:'14px',marginBottom:'3px'}},
+          ['📋 Office Follow-up — '+fupPts.length+' patient'+(fupPts.length!==1?'s':'')]),
+        h('div',{style:{fontSize:'12px',color:'var(--teal)'}},
+          [fupPts.map(function(p){return p.name.split(',')[0];}).join(', ')]),
+      ]),
+      h('button',{cls:'btn sm',style:{
+        background:'var(--teal)',color:'#fff',border:'none',flexShrink:'0',
+      },'@click':exportOfficeFup},['⬇ Download list']),
+    ]));
+  }
+
+  // TTI Global section
+  var ttiPts=DB.patients.filter(function(p){return p._ttiGlobal;});
+  if(ttiPts.length){
+    f.appendChild(h('div',{style:{
+      background:'#fef3c7',border:'1px solid #fde68a',
+      borderRadius:'var(--rs)',padding:'11px 13px',marginBottom:'12px',
+    }},[
+      h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',gap:'10px',marginBottom:'6px'}},[
+        h('div',{style:{fontWeight:'700',color:'#92400e',fontSize:'14px'}},
+          ['⚠ TTI Global — '+ttiPts.length+' patient'+(ttiPts.length!==1?'s':'')+' to verify']),
+        h('button',{cls:'btn sm',style:{background:'#92400e',color:'#fff',border:'none',flexShrink:'0'},'@click':shareTTIGlobal},['📤 Share']),
+      ]),
+      h('div',{style:{fontSize:'12px',color:'#92400e',marginBottom:'4px'}},
+        [ttiPts.map(function(p){return p.name.split(',')[0];}).join(', ')]),
+      h('div',{style:{fontSize:'11px',color:'#a16207'}},
+        ['✓ "VERIFY: TTI Global vs Insurance" included automatically in ⬇ CSV download']),
+    ]));
+  }
+
+  f.appendChild(h('div',{cls:'btn-row',style:{marginBottom:'16px'}},[
+    h('button',{cls:'btn blue',style:{flex:'1'},'@click':function(){clearTimeout(TOAST_T);TOAST=null;MODAL='email';render();}},['📤 Send charges']),
+    h('button',{cls:'btn',style:{flex:'1'},'@click':exportCSV},['⬇ CSV']),
+    h('button',{cls:'btn','@click':function(){clearTimeout(TOAST_T);TOAST=null;MODAL='export';render();}},['💾 Backup']),
+  ]));
+  if(!totalPts){f.appendChild(h('div',{cls:'empty'},[h('div',{cls:'empty-icon'},['📋']),h('div',{style:{fontWeight:'700',marginBottom:'8px'}},['No patients yet'])]));return h('div',{},[f]);}
+
+  // warn if active patients have no charges logged today
+  var ptsNoCharges=DB.patients.filter(function(p){return p.status==='active'&&!Object.keys(p.charges||{}).length;});
+  if(ptsNoCharges.length){
+    f.appendChild(h('div',{style:{background:'var(--amber2)',border:'1px solid var(--amber3)',borderRadius:'var(--rs)',padding:'10px 13px',marginBottom:'12px',fontSize:'13px',color:'var(--amber)',fontWeight:'500'}},
+      ['⚠ '+ptsNoCharges.length+' active patient'+(ptsNoCharges.length>1?'s have':' has')+' no charges logged yet']));
+  }
+
+  // grouped by date
+  f.appendChild(h('div',{cls:'sec'},['By date of service']));
+  var allDOS={};
+  DB.patients.forEach(function(pt){
+    Object.keys(pt.charges||{}).forEach(function(d){
+      if(!allDOS[d])allDOS[d]=[];
+      allDOS[d].push(pt);
+    });
+  });
+  var dosKeys=Object.keys(allDOS).sort(function(a,b){return b.localeCompare(a);});
+  if(!dosKeys.length)f.appendChild(h('div',{style:{fontSize:'13px',color:'var(--tx3)',marginBottom:'12px'}},['No charges logged yet']));
+
+  dosKeys.forEach(function(d){
+    var plist=allDOS[d];
+    var kids=[h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'8px'}},[
+      h('div',{style:{fontWeight:'700',fontSize:'14px'}},[fmtD(d)]),
+      h('div',{style:{display:'flex',alignItems:'center',gap:'8px'}},[
+        h('span',{style:{fontSize:'12px',color:'var(--tx2)'}},[plist.length+' patient'+(plist.length!==1?'s':'')]),
+        h('button',{cls:'btn xs',style:{background:'var(--blue2)',color:'var(--blue)',border:'1px solid var(--blue3)'},'@click':function(){shareDayCharges(d);}},['📤 Share']),
+        h('button',{cls:'btn xs',style:{background:'var(--green2)',color:'var(--green)',border:'1px solid var(--green3)'},'@click':function(){exportDayCSV(d);}},['⬇ CSV']),
+      ]),
+    ])];
+    plist.forEach(function(pt){
+      var dc=pt.charges[d];
+      var tm=TM[pt.type]||TM.consult;
+      var isActive=pt.status==='active';
+      kids.push(h('div',{style:{padding:'9px 0',borderTop:'1px solid var(--bd)'}},[
+        h('div',{style:{display:'flex',alignItems:'center',gap:'8px',marginBottom:'5px'}},[
+          h('div',{cls:'dot '+(isActive?'active':'discharged')},[]),
+          h('span',{style:{fontWeight:'600',fontSize:'14px'}},[pt.name]),
+          pt.age?h('span',{style:{fontSize:'12px',color:'var(--tx2)'}},[' Age '+pt.age]):null,
+          pt.room?h('span',{style:{fontSize:'12px',color:'var(--tx2)'}},[' · Rm '+pt.room]):null,
+          h('span',{cls:'badge',style:{background:tm.bg,color:tm.fg,fontSize:'10px'}},[tm.label]),
+        ]),
+        // CPT pills
+        (dc.cpt||[]).length?h('div',{cls:'pills'},(dc.cpt||[]).map(function(c){return h('span',{cls:'pill blue'},[c.code+(c.mod?'-'+c.mod:''),' ',h('span',{style:{fontWeight:'400',fontSize:'10px',fontFamily:'sans-serif',opacity:'.8'}},[c.desc])]);})):
+          h('div',{style:{fontSize:'12px',color:'var(--tx3)',marginBottom:'4px'}},['No CPT codes']),
+        // shared ICD pills
+        (dc.icd||pt.icd||[]).length?h('div',{cls:'pills',style:{marginTop:'4px'}},(dc.icd||pt.icd||[]).map(function(c){return h('span',{cls:'pill gdash'},[c.code]);})):null,
+
+      ]));
+    });
+    f.appendChild(h('div',{cls:'card'},kids));
+  });
+  return h('div',{},[f]);
+}
+
+// ── MODALS ───────────────────────────────────────────────────────────────────
+
+// ── ADD PATIENT FORM ─────────────────────────────────────────────────────────
+function submitAddPatient(){
+  var nameEl=document.getElementById('_ptName');
+  var name=(nameEl?nameEl.value||'':'').trim();
+  if(!name){
+    if(nameEl){nameEl.style.borderColor='red';nameEl.focus();}
+    // Don't flash - it would call render() in some paths. Just visual feedback only.
+    return;
+  }
+  var room  = (document.getElementById('_ptRoom')   ? document.getElementById('_ptRoom').value   : '').trim();
+  var type  =  document.getElementById('_ptType')   ? document.getElementById('_ptType').value   : 'consult';
+  var mm    = (document.getElementById('_ptMM')     ? document.getElementById('_ptMM').value     : '').replace(/\D/g,'');
+  var dd    = (document.getElementById('_ptDD')     ? document.getElementById('_ptDD').value     : '').replace(/\D/g,'');
+  var yy    = (document.getElementById('_ptYY')     ? document.getElementById('_ptYY').value     : '').replace(/\D/g,'');
+  var ageV  = (document.getElementById('_ptAge')    ? document.getElementById('_ptAge').value    : '').trim();
+  var admit =  document.getElementById('_ptAdmit')  ? document.getElementById('_ptAdmit').value  : today();
+  var dob='';
+  if(mm&&dd&&yy&&yy.length===4){
+    dob=yy+'-'+(mm.length===1?'0':'')+mm+'-'+(dd.length===1?'0':'')+dd;
+  }
+  var age=ageV||calcAge(dob)||'';
+  DB.patients.unshift({
+    id:Date.now(),name:name,room:room,dob:dob,age:age,
+    type:type,admitDate:admit||today(),
+    status:'active',facesheet:null,icd:[],charges:{}
+  });
+  save();
+  MODAL=null;  // close modal BEFORE any render/flash
+  TOAST=null;
+  clearTimeout(TOAST_T);
+  render();    // render census — modal is now closed so this is safe
+  flash('Patient added — tap their name to add charges');
+}
+
+// Wire up DOB auto-tab and age calculation via event delegation
+// Called after modal renders
+function wireDOBFields(){
+  var mm=document.getElementById('_ptMM');
+  var dd=document.getElementById('_ptDD');
+  var yy=document.getElementById('_ptYY');
+  var ag=document.getElementById('_ptAge');
+  if(!mm||!dd||!yy)return;
+  var recalc=function(){
+    var m=(mm.value||'').replace(/\D/g,'');
+    var d=(dd.value||'').replace(/\D/g,'');
+    var y=(yy.value||'').replace(/\D/g,'');
+    if(m&&d&&y&&y.length===4){
+      var dob2=y+'-'+(m.length===1?'0':'')+m+'-'+(d.length===1?'0':'')+d;
+      var a=calcAge(dob2);
+      if(a&&ag)ag.value=a;
+    }
+  };
+  mm.addEventListener('input',function(){
+    mm.value=mm.value.replace(/\D/g,'').slice(0,2);
+    if(mm.value.length>=2&&dd)dd.focus();
+    recalc();
+  });
+  dd.addEventListener('input',function(){
+    dd.value=dd.value.replace(/\D/g,'').slice(0,2);
+    if(dd.value.length>=2&&yy)yy.focus();
+    recalc();
+  });
+  yy.addEventListener('input',function(){
+    yy.value=yy.value.replace(/\D/g,'').slice(0,4);
+    recalc();
+  });
+}
+
+// ── SYNC MODAL HELPERS ────────────────────────────────────────────────────────
+function mkMethodBtn(method, label, current){
+  var active = current===method;
+  var btn = h('button',{
+    cls:'btn sm'+(active?' blue':''),
+    style:{fontWeight:active?'700':'500'},
+    '@click':function(){MODAL_SYNC_METHOD=method;render();}
+  },[label]);
+  return btn;
+}
+
+function syncBox(title, steps, tip){
+  var stepEls = steps.map(function(s){
+    return h('div',{style:{display:'flex',gap:'10px',padding:'5px 0',borderBottom:'1px solid var(--bd)'}},[
+      s[0]?h('span',{style:{fontWeight:'700',color:'var(--blue)',flexShrink:'0',minWidth:'16px',fontSize:'12px'}},[s[0]+'.']):
+           h('span',{style:{flexShrink:'0',minWidth:'16px'}},['']),
+      h('span',{style:{fontSize:'13px',color:'var(--tx2)',lineHeight:'1.5'}},[s[1]]),
+    ]);
+  });
+  return h('div',{style:{background:'var(--bg2)',border:'1px solid var(--bd)',borderRadius:'var(--rs)',padding:'12px',marginBottom:'14px'}},[
+    h('div',{style:{fontWeight:'700',fontSize:'13px',color:'var(--tx)',marginBottom:'10px'}},[title]),
+    h('div',{style:{borderTop:'1px solid var(--bd)'}},stepEls),
+    tip?h('div',{style:{marginTop:'9px',fontSize:'12px',color:'var(--tx2)',fontStyle:'italic'}},[tip]):null,
+  ]);
+}
+
+function mkModal(){
+  var ov=h('div',{cls:'overlay','@click':function(e){if(e.target===ov){MODAL=null;render();}}});
+  var sh=h('div',{cls:'sheet'},[h('div',{cls:'drag'})]);
+
+  if(MODAL==='add'){
+    sh.appendChild(h('div',{cls:'modal-title'},['Add patient']));
+
+    // ── NAME (required) ──
+    sh.appendChild(h('div',{cls:'field'},[
+      h('label',{},['Patient name *']),
+      h('input',{cls:'inp',id:'_ptName',type:'text',placeholder:'Last, First',autocomplete:'off'}),
+    ]));
+
+    // ── ROOM + VISIT TYPE ──
+    sh.appendChild(h('div',{cls:'g2'},[
+      h('div',{cls:'field'},[
+        h('label',{},['Room']),
+        h('input',{cls:'inp',id:'_ptRoom',type:'text',placeholder:'4B-12',autocomplete:'off'}),
+      ]),
+      h('div',{cls:'field'},[
+        h('label',{},['Visit type']),
+        h('select',{cls:'sel',id:'_ptType'},
+          Object.keys(TM).map(function(k){
+            var o=h('option',{value:k},[TM[k].label]);
+            if(k==='consult')o.selected=true;
+            return o;
+          })),
+      ]),
+    ]));
+
+    // ── DOB ──
+    sh.appendChild(h('div',{cls:'field'},[
+      h('label',{},['Date of birth']),
+      h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr 1.6fr',gap:'6px'}},[
+        h('div',{},[h('div',{style:{fontSize:'10px',color:'var(--tx2)',textAlign:'center',marginBottom:'3px'}},['Month']),h('input',{cls:'inp',id:'_ptMM',type:'text',inputmode:'numeric',placeholder:'MM',maxlength:'2',style:{textAlign:'center',width:'100%'}})]),
+        h('div',{},[h('div',{style:{fontSize:'10px',color:'var(--tx2)',textAlign:'center',marginBottom:'3px'}},['Day']),  h('input',{cls:'inp',id:'_ptDD',type:'text',inputmode:'numeric',placeholder:'DD',maxlength:'2',style:{textAlign:'center',width:'100%'}})]),
+        h('div',{},[h('div',{style:{fontSize:'10px',color:'var(--tx2)',textAlign:'center',marginBottom:'3px'}},['Year']), h('input',{cls:'inp',id:'_ptYY',type:'text',inputmode:'numeric',placeholder:'YYYY',maxlength:'4',style:{textAlign:'center',width:'100%'}})]),
+      ]),
+    ]));
+    sh.appendChild(h('div',{cls:'g2'},[
+      h('div',{cls:'field'},[h('label',{},['Age']),h('input',{cls:'inp',id:'_ptAge',type:'text',inputmode:'numeric',placeholder:'e.g. 67',maxlength:'3',style:{textAlign:'center'}})]),
+      h('div',{cls:'field'},[h('label',{},['Admission date']),h('input',{cls:'inp',id:'_ptAdmit',type:'date',value:today()})]),
+    ]));
+
+    sh.appendChild(h('button',{cls:'btn blue block',style:{padding:'13px',marginBottom:'8px'},'@click':submitAddPatient},['Add patient']));
+    sh.appendChild(h('button',{cls:'btn block','@click':function(){MODAL=null;render();}},['Cancel']));
+  }
+
+  if(MODAL==='email'){
+    sh.appendChild(h('div',{cls:'modal-title'},['Send charges to biller']));
+
+
+    // how-to tip
+    sh.appendChild(h('div',{style:{background:'var(--blue2)',border:'1px solid var(--blue3)',borderRadius:'var(--rs)',padding:'11px 13px',marginBottom:'14px',fontSize:'13px',color:'var(--blue)',lineHeight:'1.6'}},[
+      h('b',{},['How to send via Zoho Mail:']),
+      h('ol',{style:{marginLeft:'16px',marginTop:'4px'}},[
+        h('li',{},[fsPatients.length?'Download facesheets below (if needed)':'Tap "📤 Share" below']),
+        h('li',{},['Tap "📤 Share" — your iPhone share sheet opens']),
+        h('li',{},['Choose "Zoho Mail" from the share sheet']),
+        h('li',{},['The charges are pre-filled — attach facesheet(s) if needed, then send']),
+      ]),
+      h('p',{style:{marginTop:'8px',fontSize:'12px',opacity:'.8'}},['If Zoho Mail isn\'t in the share sheet, use "📋 Copy" and paste into a new Zoho Mail email.']),
+    ]));
+
+    sh.appendChild(h('div',{style:{display:'flex',flexDirection:'column',gap:'9px'}},[
+      h('button',{cls:'btn blue block','@click':function(){MODAL=null;render();shareCharges([]);}},['📤 Share  →  open in Zoho Mail']),
+      h('button',{cls:'btn block','@click':function(){MODAL=null;render();copyCharges([]);}},['📋 Copy charges to clipboard']),
+      h('button',{cls:'btn sm','@click':function(){MODAL=null;render();}},['Cancel']),
+    ]));
+  }
+
+  if(MODAL==='settings'){
+    sh.appendChild(h('div',{cls:'modal-title'},['Settings']));
+    var pinp=h('input',{cls:'inp',value:DB.cfg.practice||'','@input':function(e){DB.cfg.practice=e.target.value;}});
+    var binp=h('input',{cls:'inp',type:'email',placeholder:'biller@practice.com',value:DB.cfg.email||'','@input':function(e){DB.cfg.email=e.target.value;}});
+    sh.appendChild(h('div',{cls:'field'},[h('label',{},['Practice name']),pinp]));
+    sh.appendChild(h('div',{cls:'field'},[h('label',{},['Default biller email']),binp]));
+    sh.appendChild(h('button',{cls:'btn blue block','@click':function(){save();MODAL=null;flash('Settings saved');render();}},['Save settings']));
+    sh.appendChild(h('div',{cls:'divider'}));
+    sh.appendChild(h('div',{style:{fontSize:'12px',color:'var(--tx2)',marginBottom:'10px'}},[LS?'✅ Data persists on this device. ':'⚠ Session only — export backup below. ',DB.patients.length+' patient'+(DB.patients.length!==1?'s':'')+' stored.']));
+    sh.appendChild(h('div',{cls:'btn-row'},[
+      h('button',{cls:'btn sm','@click':function(){clearTimeout(TOAST_T);TOAST=null;MODAL='export';render();}},['🔄 Sync / backup']),
+      h('button',{cls:'btn sm','@click':importData},['📂 Import backup']),
+      LS?h('button',{cls:'btn sm red','@click':function(){if(confirm('Delete ALL data permanently?')){sDel(SK);DB={patients:[],cfg:{practice:'Nephrology Associates',email:''}};MODAL=null;flash('Cleared','amber');render();}}},['🗑 Clear all']):null,
+    ]));
+  }
+
+  if(MODAL==='export'){
+    sh.appendChild(h('div',{cls:'modal-title'},['Sync: iPhone ↔ Windows  (Zoho ecosystem)']));
+
+    var isIphone=/iPhone|iPad|iPod/.test(navigator.userAgent);
+    var isWindows=/Win/.test(navigator.platform||navigator.userAgent);
+
+    // ── METHOD TABS ──
+    // We offer 3 methods: Zoho Mail (best, they have it), Google Drive, OneDrive
+    var METHOD=MODAL_SYNC_METHOD||'zoho';
+
+    var methodBtns=h('div',{style:{display:'flex',gap:'6px',marginBottom:'14px',flexWrap:'wrap'}},[
+      mkMethodBtn('zoho',  '✉ Zoho Mail', METHOD),
+      mkMethodBtn('workdrive','📁 WorkDrive', METHOD),
+      mkMethodBtn('onedrive','☁ OneDrive', METHOD),
+    ]);
+    sh.appendChild(methodBtns);
+
+    // ── ZOHO MAIL method ──
+    if(METHOD==='zoho'){
+      sh.appendChild(syncBox('✉ Via Zoho Mail — easiest, no extra apps',
+        isIphone
+          ? [['1','Tap "📤 Share backup" below'],
+             ['2','Tap "Mail" → Zoho Mail opens'],
+             ['3','Send the email to yourself'],
+             ['4','On Windows: open Zoho Mail in browser'],
+             ['5','Download the attachment (.json file)'],
+             ['6','Drag that file onto the app window — done']]
+          : [['1','On iPhone: export backup and email to yourself in Zoho'],
+             ['2','Open Zoho Mail here in your browser'],
+             ['3','Download the .json attachment'],
+             ['4','Drag the file onto this app window — imports instantly'],
+             ['','Or click "📂 Import backup file" below and select it']],
+        'You already use Zoho Mail — no new apps or accounts needed.'
+      ));
+    }
+
+    // ── GOOGLE DRIVE method ──
+    if(METHOD==='workdrive'){
+      sh.appendChild(syncBox('📁 Via Zoho WorkDrive — all Zoho, no extra accounts',
+        isIphone
+          ? [['1','Install Zoho WorkDrive app on iPhone (free, from Zoho)'],
+             ['2','Tap "📤 Share backup" below'],
+             ['3','Tap "Save to Files" → choose WorkDrive folder'],
+             ['4','On Windows: open workdrive.zoho.com in browser'],
+             ['5','Find the nephro_backup file → download it'],
+             ['6','Drag it onto this app window — done']]
+          : [['1','On iPhone: share backup → save to WorkDrive via Files app'],
+             ['2','Open workdrive.zoho.com in this browser'],
+             ['3','Find the nephro_backup file → download it'],
+             ['4','Drag it onto this app window — imports instantly'],
+             ['','Or click "📂 Import backup file" below']],
+        'Zoho WorkDrive uses the same Zoho account you already have — no new sign-ups needed.'
+      ));
+    }
+
+    // ── ONEDRIVE method ──
+    if(METHOD==='onedrive'){
+      sh.appendChild(syncBox('☁ Via OneDrive — already on Windows',
+        isIphone
+          ? [['1','Install OneDrive app on iPhone (free, from Microsoft)'],
+             ['2','Tap "📤 Share backup" → "Save to Files" → OneDrive'],
+             ['3','On Windows: open File Explorer → OneDrive folder'],
+             ['4','Drag the .json file onto this app window — done']]
+          : [['1','On iPhone: share backup → save to OneDrive via Files app'],
+             ['2','On Windows: open File Explorer → OneDrive folder'],
+             ['3','Find the nephro_backup file'],
+             ['4','Drag it onto this app window — imports instantly'],
+             ['','Or click "📂 Import" below']],
+        'OneDrive is built into Windows 11 — no download needed on PC.'
+      ));
+    }
+
+    // ── ACTION BUTTONS ──
+    sh.appendChild(h('div',{style:{display:'flex',gap:'8px',marginBottom:'12px',flexWrap:'wrap'}},[
+      isIphone
+        ? h('button',{cls:'btn blue',style:{flex:'1'},'@click':function(){shareBackup();}},['📤 Share backup'])
+        : null,
+      h('button',{cls:'btn '+(isIphone?'':'blue'),style:{flex:'1'},'@click':exportJSON},['⬇ Download backup']),
+    ].filter(Boolean)));
+
+    sh.appendChild(h('button',{cls:'btn block',style:{marginBottom:'12px'},'@click':importData},['📂 Import backup file']));
+
+    // ── DRAG DROP TIP (desktop only) ──
+    if(!isIphone){
+      sh.appendChild(h('div',{style:{background:'var(--green2)',border:'1px solid var(--green3)',borderRadius:'var(--rs)',padding:'10px 13px',marginBottom:'14px',fontSize:'12px',color:'var(--green)',lineHeight:'1.6'}},[
+        '💡 Fastest on Windows: just drag the .json file from File Explorer or your Downloads folder and drop it anywhere on the app — no need to click Import.',
+      ]));
+    }
+
+    // ── DAILY TIP ──
+    sh.appendChild(h('div',{style:{background:'var(--amber2)',border:'1px solid var(--amber3)',borderRadius:'var(--rs)',padding:'10px 13px',marginBottom:'14px',fontSize:'12px',color:'var(--amber)',lineHeight:'1.6'}},[
+      h('b',{},['💡 Recommended daily routine: ']),
+      'Finish rounds on iPhone → Share backup to yourself in Zoho Mail or WorkDrive → on Windows, download → drag onto app. Under 60 seconds.',
+    ]));
+
+    // ── DATA INFO ──
+    var totalDOS=Object.keys(DB.patients.reduce(function(a,p){Object.keys(p.charges||{}).forEach(function(d){a[d]=1;});return a;},{})).length;
+    sh.appendChild(h('div',{style:{fontSize:'12px',color:'var(--tx2)',marginBottom:'12px'}},[
+      LS?'✅ Data saved on this device. ':'⚠ Session only — export to preserve data. ',
+      DB.patients.length+' patient'+(DB.patients.length!==1?'s':'')+' · '+totalDOS+' date'+(totalDOS!==1?'s':'')+' of service.',
+    ]));
+
+    sh.appendChild(h('div',{style:{display:'flex',gap:'8px'}},[
+      LS?h('button',{cls:'btn sm red','@click':function(){
+        if(confirm('Delete ALL data on this device? Cannot be undone.')){
+          sDel(SK);DB={patients:[],cfg:{practice:'Nephrology Associates',email:''}};
+          MODAL=null;MODAL_SYNC_METHOD=null;flash('Data cleared','amber');render();
+        }
+      }},['🗑 Clear this device']):null,
+      h('button',{cls:'btn sm','@click':function(){MODAL=null;MODAL_SYNC_METHOD=null;render();}},['Close']),
+    ].filter(Boolean)));
+  }
+
+  ov.appendChild(sh);return ov;
+}
+
+// ── ACTIONS ──────────────────────────────────────────────────────────────────
+function openAddModal(){
+  clearTimeout(TOAST_T);TOAST=null; // cancel any pending render() from previous flash
+  MODAL='add';render();
+}
+
+function addPatient(){
+  if(!NPT.name.trim())return;
+  DB.patients.unshift({id:Date.now(),name:NPT.name,room:NPT.room,dob:NPT.dob,
+    age:NPT.age||calcAge(NPT.dob),type:NPT.type,admitDate:NPT.admitDate,
+    status:'active',facesheet:null,icd:[],charges:{}});
+  save();MODAL=null;flash('Patient added');render();
+}
+
+function setPtStatus(id,status){
+  var pt=getPt(id);if(!pt)return;pt.status=status;save();
+  flash(status==='discharged'?'Marked as discharged':'Marked as active','blue');render();
+}
+
+function openCharge(pt){
+  PID=pt.id;ICDQ_PT='';
+  ECCODE='';ECDESC='';ECERR='';
+  var keys=Object.keys(pt.charges||{}).sort(function(a,b){return b.localeCompare(a);});
+  EDOS=keys.length?keys[0]:null;
+  V='charge';render();
+}
+
+// patient-level ICD
+function togglePtICD(ptId,code,desc,custom){
+  var pt=getPt(ptId);if(!pt)return;
+  if(!pt.icd)pt.icd=[];
+  var i=pt.icd.findIndex(function(x){return x.code===code;});
+  if(i>=0)pt.icd.splice(i,1);else pt.icd.push({code:code,desc:desc,custom:!!custom});
+  save();render();
+}
+function addCustomPtICD(ptId){
+  var code=ECCODE.trim().toUpperCase(),desc=ECDESC.trim();
+  if(!code){ECERR='Enter a code';render();return;}
+  if(!desc){ECERR='Enter a description';render();return;}
+  var pt=getPt(ptId);if(!pt)return;
+  if(!pt.icd)pt.icd=[];
+  if(pt.icd.find(function(x){return x.code===code;})){ECERR='Already added';render();return;}
+  pt.icd.push({code:code,desc:desc,custom:true});
+  save();ECCODE='';ECDESC='';ECERR='';render();
+}
+
+// DOS CPT
+
+function toggleDOSICD(ptId,d,code,desc,custom){
+  var pt=getPt(ptId);if(!pt)return;
+  if(!pt.charges)pt.charges={};
+  if(!pt.charges[d])pt.charges[d]={cpt:[],icd:[],notes:''};
+  var dc=pt.charges[d];
+  if(!dc.icd)dc.icd=[];
+  var i=dc.icd.findIndex(function(x){return x.code===code;});
+  if(i>=0)dc.icd.splice(i,1);else dc.icd.push({code:code,desc:desc,custom:!!custom});
+  dc._icdCarried=false;
+  save();render();
+}
+
+function toggleDOSCPT(ptId,d,code,desc){
+  var pt=getPt(ptId);if(!pt)return;
+  if(!pt.charges)pt.charges={};
+  if(!pt.charges[d])pt.charges[d]={cpt:[],notes:''};
+  var dc=pt.charges[d];if(!dc.cpt)dc.cpt=[];
+  var i=dc.cpt.findIndex(function(x){return x.code===code;});
+  if(i>=0)dc.cpt.splice(i,1);else dc.cpt.push({code:code,desc:desc,mod:''});
+  save();render();
+}
+function saveDOS(ptId,d,dc){
+  var pt=getPt(ptId);if(!pt)return;
+  if(!pt.charges)pt.charges={};
+  pt.charges[d]=dc;save();
+}
+
+function readFS(file,ptId){
+  var reader=new FileReader();
+  reader.onload=function(e){var pt=getPt(ptId);if(!pt)return;pt.facesheet=e.target.result;save();flash('Facesheet uploaded ✓','blue');render();};
+  reader.readAsDataURL(file);
+}
+
+
+function downloadFacesheet(pt){
+  if(!pt.facesheet){flash('No facesheet uploaded for '+pt.name,'amber');return;}
+  var filename='facesheet_'+(pt.name||'patient').replace(/\s+/g,'_')+(pt.room?'_Rm'+pt.room:'')+'.png';
+  try{
+    var a=document.createElement('a');a.href=pt.facesheet;a.download=filename;a.style.display='none';
+    document.body.appendChild(a);a.click();
+    setTimeout(function(){document.body.removeChild(a);},1000);
+  }catch(e){
+    var w=window.open('','_blank');
+    if(w){
+      w.document.write('<html><head><title>'+filename+'</title></head><body style="margin:0;background:#f1f5f9;display:flex;flex-direction:column;align-items:center;padding:20px;font-family:-apple-system,sans-serif">');
+      w.document.write('<p style="margin-bottom:14px;font-size:14px;color:#475569;text-align:center">📱 iPhone: press &amp; hold image → <b>Save to Photos or Files</b><br>💻 Desktop: right-click → <b>Save Image As</b></p>');
+      w.document.write('<img src="'+pt.facesheet+'" style="max-width:100%;border-radius:10px;box-shadow:0 2px 16px rgba(0,0,0,.15)" />');
+      w.document.write('</body></html>');
+      w.document.close();
+    }
+  }
+  flash('Facesheet downloading for '+pt.name,'blue');
+}
+
+
+// ── CHARGE TEXT BUILDER ──────────────────────────────────────────────────────
+function buildChargeText(fsIds){
+  var today2=today();
+  var lines=['NEPHROLOGY CHARGE CAPTURE'];
+  lines.push('Practice: '+DB.cfg.practice);
+  lines.push('Sent: '+fmtD(today2));
+  lines.push('');
+
+  // Facesheet note
+  if(fsIds&&fsIds.length){
+    var fsNames=fsIds.map(function(id){var pt=getPt(id);return pt?pt.name+(pt.room?' (Rm '+pt.room+')':''):'';}).filter(Boolean);
+    if(fsNames.length){
+      lines.push('⚠ PLEASE ATTACH FACESHEETS for:');
+      fsNames.forEach(function(n){lines.push('  • '+n);});
+      lines.push('');
+    }
+  }
+
+  // TTI Global billing verification warning
+  var ttiPts=DB.patients.filter(function(p){return p._ttiGlobal;});
+  if(ttiPts.length){
+    lines.push('⚠ BILLING VERIFICATION REQUIRED:');
+    lines.push('The following patient'+(ttiPts.length>1?'s require':'requires')+' verification —');
+    lines.push('please confirm whether to bill TTI GLOBAL or INSURANCE:');
+    ttiPts.forEach(function(p){lines.push('  • '+p.name+(p.room?' (Rm '+p.room+')':''));});
+    lines.push('');
+  }
+
+  // Group by date of service for clean layout
+  var allDOS={};
+  DB.patients.forEach(function(pt){
+    Object.keys(pt.charges||{}).sort().forEach(function(d){
+      if(!allDOS[d])allDOS[d]=[];
+      allDOS[d].push(pt);
+    });
+  });
+
+  var dosKeys=Object.keys(allDOS).sort(function(a,b){return b.localeCompare(a);});
+
+  dosKeys.forEach(function(d){
+    lines.push('═══════════════════════════════');
+    lines.push('DATE OF SERVICE: '+fmtD(d));
+    lines.push('═══════════════════════════════');
+    allDOS[d].forEach(function(pt){
+      var dc=pt.charges[d];
+      if(dc._notSeen){
+        // Include not-seen as a note to biller — not a billable entry
+        lines.push('');
+        lines.push('Patient : '+pt.name+(pt.room?' | Rm '+pt.room:''));
+        lines.push('⊘ NOT SEEN this date — no charge');
+        lines.push('───────────────────────────────');
+        return;
+      }
+      var tm=TM[pt.type]||TM.consult;
+      lines.push('');
+      lines.push('Patient : '+pt.name+(pt.age?' | Age '+pt.age:'')+(pt.room?' | Rm '+pt.room:''));
+      lines.push('Type    : '+tm.label+' | '+(pt.status==='active'?'Active inpatient':'Discharged'));
+      if(pt.admitDate) lines.push('Admitted: '+fmtD(pt.admitDate));
+      // TTI Global billing flag
+      if(pt._ttiGlobal){
+        lines.push('⚠ BILLING : VERIFY — TTI GLOBAL vs INSURANCE');
+      }
+      // CPT codes
+      if(dc.cpt&&dc.cpt.length){
+        lines.push('CPT     : '+dc.cpt.map(function(c){return c.code+(c.mod?' ['+c.mod+']':'')+' — '+c.desc;}).join('\n          '));
+      } else {
+        lines.push('CPT     : (none)');
+      }
+      var btIcd=dc.icd||pt.icd||[];
+      if(btIcd.length){
+        lines.push('ICD-10  : '+btIcd.map(function(c){return c.code+' — '+c.desc;}).join('\n          '));
+      } else {
+        lines.push('ICD-10  : (none)');
+      }
+
+      lines.push('───────────────────────────────');
+    });
+    lines.push('');
+  });
+
+  if(!dosKeys.length){
+    lines.push('No charges logged yet.');
+  }
+
+  return lines.join('\n');
+}
+
+// ── SHARE via Web Share API (opens Zoho Mail on iPhone) ───────────────────
+function shareCharges(fsIds){
+  if(fsIds&&fsIds.length){
+    fsIds.forEach(function(id,i){
+      setTimeout(function(){var pt=getPt(id);if(pt)downloadFacesheet(pt);},i*700);
+    });
+  }
+
+  var text=buildChargeText(fsIds);
+  var title='Nephrology Charges — '+fmtD(today());
+  var billerEmail=DB.cfg&&DB.cfg.email?DB.cfg.email:'';
+
+  if(navigator.share){
+    // iPhone — opens iOS share sheet, tap Zoho Mail from the list
+    navigator.share({title:title,text:text}).then(function(){
+      flash('Charges shared ✓');
+    }).catch(function(err){
+      if(err.name!=='AbortError'){
+        copyTextToClipboard(text);
+        flash('Share unavailable — copied to clipboard instead','blue');
+      }
+    });
+  } else {
+    // Windows / desktop — copy to clipboard then open Zoho Mail compose
+    copyTextToClipboard(text);
+    // Build Zoho Mail compose URL
+    var subject=encodeURIComponent(title);
+    var to=encodeURIComponent(billerEmail);
+    var zohoUrl='https://mail.zoho.com/mail/compose?to='+to+'&subject='+subject;
+    // Open Zoho Mail in new tab — user pastes from clipboard
+    window.open(zohoUrl,'_blank');
+    flash('✓ Charges copied — paste (Ctrl+V) into the Zoho Mail window that just opened','green');
+  }
+}
+
+// ── COPY to clipboard ────────────────────────────────────────────────────────
+function copyCharges(fsIds){
+  if(fsIds&&fsIds.length){
+    fsIds.forEach(function(id,i){
+      setTimeout(function(){var pt=getPt(id);if(pt)downloadFacesheet(pt);},i*700);
+    });
+  }
+  var text=buildChargeText(fsIds);
+  copyTextToClipboard(text);
+}
+
+function copyTextToClipboard(text){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){
+      flash('✓ Copied! Open Zoho Mail → New email → paste (long-press in body)','green');
+    }).catch(function(){
+      fallbackCopy(text);
+    });
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text){
+  var ta=document.createElement('textarea');
+  ta.value=text;ta.style.cssText='position:fixed;top:0;left:0;opacity:0;';
+  document.body.appendChild(ta);ta.focus();ta.select();
+  try{
+    document.execCommand('copy');
+    flash('✓ Copied! Open Zoho Mail → New email → paste','green');
+  }catch(e){
+    flash('Could not copy automatically — please select and copy manually','amber');
+  }
+  document.body.removeChild(ta);
+}
+
+// Keep doEmail as thin wrapper for backward compat (per-date share buttons)
+function doEmail(fsIds){ shareCharges(fsIds||[]); }
+
+
+// Share charges for a single date of service
+function shareDayCharges(d){
+  var plist=[];
+  DB.patients.forEach(function(pt){if(pt.charges&&pt.charges[d])plist.push(pt);});
+  if(!plist.length){flash('No charges for '+fmtD(d),'amber');return;}
+
+  var lines=['NEPHROLOGY CHARGE CAPTURE'];
+  lines.push('Practice: '+DB.cfg.practice);
+  lines.push('Date of service: '+fmtD(d));
+  lines.push('═══════════════════════════════');
+  plist.forEach(function(pt){
+    var dc=pt.charges[d];
+    var tm=TM[pt.type]||TM.consult;
+    lines.push('');
+    lines.push('Patient : '+pt.name+(pt.age?' | Age '+pt.age:'')+(pt.room?' | Rm '+pt.room:''));
+    lines.push('Type    : '+tm.label+' | '+(pt.status==='active'?'Active':'Discharged'));
+    if(dc.cpt&&dc.cpt.length){
+      lines.push('CPT     : '+dc.cpt.map(function(c){return c.code+(c.mod?' ['+c.mod+']':'')+' — '+c.desc;}).join('\n          '));
+    } else {
+      lines.push('CPT     : (none)');
+    }
+    var dayIcd=dc.icd||pt.icd||[];
+    if(dayIcd.length){
+      lines.push('ICD-10  : '+dayIcd.map(function(c){return c.code+' — '+c.desc;}).join('\n          '));
+    }
+
+    lines.push('───────────────────────────────');
+  });
+
+  var text=lines.join('\n');
+  var title='Nephrology Charges — '+fmtD(d);
+  var billerEmail=DB.cfg&&DB.cfg.email?DB.cfg.email:'';
+
+  if(navigator.share){
+    navigator.share({title:title,text:text}).then(function(){
+      flash('Charges for '+fmtD(d)+' shared ✓');
+    }).catch(function(err){
+      if(err.name!=='AbortError'){copyTextToClipboard(text);}
+    });
+  } else {
+    copyTextToClipboard(text);
+    var subject=encodeURIComponent(title);
+    var to=encodeURIComponent(billerEmail);
+    window.open('https://mail.zoho.com/mail/compose?to='+to+'&subject='+subject,'_blank');
+    flash('✓ Charges copied — paste (Ctrl+V) into Zoho Mail','green');
+  }
+}
+
+function exportDayCSV(d){
+  var hdr=['Patient','Age','Room','DOB','Admit','Status','Visit Type','Date of Service','CPT Code','CPT Description','Modifier','ICD-10 Codes','Billing Verification'];
+  var rows=[hdr];
+  DB.patients.forEach(function(pt){
+    var dc=pt.charges&&pt.charges[d];
+    if(!dc)return;
+    if(dc._notSeen)return;
+    var icdStr=(dc.icd||pt.icd||[]).map(function(c){return c.code+' '+c.desc;}).join('; ');
+    var billingNote=pt._ttiGlobal?'VERIFY: TTI Global vs Insurance':'';
+    if(!(dc.cpt||[]).length){
+      rows.push([pt.name,pt.age||'',pt.room||'',pt.dob||'',pt.admitDate||'',pt.status,
+        TM[pt.type]?TM[pt.type].label:pt.type,d,'','','',icdStr,billingNote]);
+    } else {
+      dc.cpt.forEach(function(c){
+        rows.push([pt.name,pt.age||'',pt.room||'',pt.dob||'',pt.admitDate||'',pt.status,
+          TM[pt.type]?TM[pt.type].label:pt.type,d,c.code,c.desc,c.mod||'',icdStr,billingNote]);
+      });
+    }
+  });
+  var csv=rows.map(function(r){return r.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+  dlText(csv,'charges_'+d+'.csv','text/csv');
+  flash('CSV exported for '+fmtD(d));
+}
+
+function exportCSV(){
+  var hdr=['Patient','Age','Room','DOB','Admit','Status','Visit Type','Date of Service','CPT','Modifier','ICD-10 Codes','Billing Verification'];
+  var rows=[hdr];
+  DB.patients.forEach(function(pt){
+    var dosKeys=Object.keys(pt.charges||{}).sort();
+    var billingNote=pt._ttiGlobal?'VERIFY: TTI Global vs Insurance':'';
+    if(!dosKeys.length){
+      rows.push([pt.name,pt.age||'',pt.room||'',pt.dob||'',pt.admitDate||'',pt.status,TM[pt.type]?TM[pt.type].label:pt.type,'','','','',billingNote]);
+    } else {
+      dosKeys.forEach(function(d){
+        var dc=pt.charges[d];
+        (dc.cpt||[{code:'',desc:'',mod:''}]).forEach(function(c){
+          var icdStr=(dc.icd||pt.icd||[]).map(function(c){return c.code;}).join('; ');
+          rows.push([pt.name,pt.age||'',pt.room||'',pt.dob||'',pt.admitDate||'',pt.status,
+            TM[pt.type]?TM[pt.type].label:pt.type,d,c.code,c.mod||'',icdStr,billingNote]);
+        });
+      });
+    }
+  });
+  var csv=rows.map(function(r){return r.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+  dlText(csv,'nephro_charges_'+today()+'.csv','text/csv');
+}
+
+function exportTTIGlobal(){
+  var pts=DB.patients.filter(function(p){return p._ttiGlobal;});
+  if(!pts.length){flash('No patients marked for TTI Global verification','amber');return;}
+
+  // CSV
+  var hdr=['Patient','Age','DOB','Room','Admit Date','Status','Billing Note'];
+  var rows=[hdr];
+  pts.forEach(function(pt){
+    rows.push([pt.name,pt.age||'',pt.dob||'',pt.room||'',pt.admitDate||'',pt.status,'VERIFY: TTI Global vs Insurance']);
+  });
+  var csv=rows.map(function(r){return r.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+  dlText(csv,'tti_global_verify_'+today()+'.csv','text/csv');
+  flash('TTI Global list downloaded — '+pts.length+' patient'+(pts.length!==1?'s':''));
+}
+
+function shareTTIGlobal(){
+  var pts=DB.patients.filter(function(p){return p._ttiGlobal;});
+  if(!pts.length){flash('No patients marked for TTI Global verification','amber');return;}
+  var lines=[];
+  lines.push('⚠ TTI GLOBAL BILLING VERIFICATION');
+  lines.push('Date: '+fmtD(today()));
+  lines.push('');
+  lines.push('Please verify whether the following patient'+(pts.length>1?'s':'')+'');
+  lines.push('should be billed to TTI GLOBAL or INSURANCE:');
+  lines.push('');
+  pts.forEach(function(pt,i){
+    lines.push((i+1)+'. '+pt.name);
+    if(pt.age) lines.push('   Age: '+pt.age);
+    if(pt.room)lines.push('   Room: '+pt.room);
+    if(pt.dob) lines.push('   DOB: '+fmtD(pt.dob));
+    if(pt.admitDate)lines.push('   Admit: '+fmtD(pt.admitDate));
+    lines.push('');
+  });
+  lines.push('Total: '+pts.length+' patient'+(pts.length!==1?'s requiring':'requiring')+' verification');
+  var text=lines.join('\n');
+  if(navigator.share){
+    navigator.share({title:'TTI Global Verification List',text:text})
+      .then(function(){flash('TTI Global list shared');})
+      .catch(function(){copyTextToClipboard(text);flash('Copied to clipboard — paste into Zoho Mail');});
+  } else {
+    copyTextToClipboard(text);
+    var billerEmail=DB.cfg&&DB.cfg.email?DB.cfg.email:'';
+    window.open('https://mail.zoho.com/mail/compose?to='+encodeURIComponent(billerEmail)+'&subject='+encodeURIComponent('TTI Global Billing Verification — '+fmtD(today())),'_blank');
+    flash('✓ TTI Global list copied — paste (Ctrl+V) into Zoho Mail','green');
+  }
+}
+
+function exportOfficeFup(){
+  var pts=DB.patients.filter(function(p){return p._officeFup;});
+  if(!pts.length){flash('No patients marked for office follow-up','amber');return;}
+
+  // Build a clean printable text list
+  var lines=[];
+  lines.push('OFFICE FOLLOW-UP LIST');
+  lines.push('Generated: '+fmtD(today()));
+  lines.push('═'.repeat(40));
+  lines.push('');
+  pts.forEach(function(pt,i){
+    lines.push((i+1)+'. '+pt.name);
+    if(pt.age)lines.push('   Age: '+pt.age);
+    if(pt.room)lines.push('   Room: '+pt.room);
+    if(pt.dob)lines.push('   DOB: '+fmtD(pt.dob));
+    if(pt.admitDate)lines.push('   Admit: '+fmtD(pt.admitDate));
+    lines.push('   Status: '+pt.status.charAt(0).toUpperCase()+pt.status.slice(1));
+    lines.push('');
+  });
+  lines.push('Total: '+pts.length+' patient'+(pts.length!==1?'s':''));
+
+  // Also build CSV
+  var hdr=['Patient','Age','DOB','Room','Admit Date','Status'];
+  var rows=[hdr];
+  pts.forEach(function(pt){
+    rows.push([pt.name,pt.age||'',pt.dob||'',pt.room||'',pt.admitDate||'',pt.status]);
+  });
+  var csv=rows.map(function(r){return r.map(function(v){return '"'+String(v).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+
+  dlText(csv,'office_fup_'+today()+'.csv','text/csv');
+  flash('Office FUP list downloaded — '+pts.length+' patient'+(pts.length!==1?'s':''));
+}
+
+function exportJSON(){
+  var exp=JSON.parse(JSON.stringify(DB));
+  exp.patients.forEach(function(p){p.facesheet=null;});
+  dlText(JSON.stringify(exp,null,2),'nephro_backup_'+today()+'.json','application/json');
+  markBackupDone();
+  render();
+}
+
+// Share the backup file via iOS share sheet (AirDrop, WorkDrive, Zoho Mail, etc.)
+function shareBackup(){
+  var exp=JSON.parse(JSON.stringify(DB));
+  exp.patients.forEach(function(p){p.facesheet=null;});
+  var json=JSON.stringify(exp,null,2);
+  var filename='nephro_backup_'+today()+'.json';
+
+  try{
+    // Create a File object and share it
+    var blob=new Blob([json],{type:'application/json'});
+    var file=new File([blob],filename,{type:'application/json'});
+    if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+      navigator.share({
+        title:'Nephro Backup — '+today(),
+        text:'Nephrology charge capture backup — import on other device',
+        files:[file]
+      }).then(function(){markBackupDone();flash('Backup shared ✓');render();})
+        .catch(function(e){if(e.name!=='AbortError')exportJSON();});
+      return;
+    }
+  }catch(e){}
+  // Fallback: regular download
+  exportJSON();
+  flash('Saved to Downloads — upload to WorkDrive or OneDrive to sync','blue');
+}
+
+function importData(){
+  var inp=document.createElement('input');inp.type='file';inp.accept='.json,application/json';
+  inp.onchange=function(){
+    if(!inp.files||!inp.files[0])return;
+    processImportFile(inp.files[0]);
+  };
+  inp.click();
+}
+
+function processImportFile(file){
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var imp=JSON.parse(e.target.result);
+      if(!imp.patients||!imp.cfg)throw new Error('bad format');
+
+      var added=0,updated=0;
+      imp.patients.forEach(function(p){
+        var existing=DB.patients.find(function(x){return x.id===p.id;});
+        if(!existing){
+          // New patient — add but preserve any facesheet from current device
+          DB.patients.push(p);added++;
+        } else {
+          // Existing patient — merge charges (imported charges + local charges, keep all)
+          var mergedCharges=Object.assign({},existing.charges||{},p.charges||{});
+          // Merge ICD codes (combine, deduplicate by code)
+          var allICD=(existing.icd||[]).concat(p.icd||[]);
+          var seenICD={};
+          var mergedICD=allICD.filter(function(c){if(seenICD[c.code])return false;seenICD[c.code]=true;return true;});
+          // Update fields from imported version, but keep local facesheet if present
+          Object.assign(existing,p,{
+            charges:mergedCharges,
+            icd:mergedICD,
+            facesheet:existing.facesheet||p.facesheet||null
+          });
+          updated++;
+        }
+      });
+      // Update settings if imported has them
+      if(imp.cfg.practice)DB.cfg.practice=imp.cfg.practice;
+      if(imp.cfg.email)DB.cfg.email=imp.cfg.email;
+      save();MODAL=null;
+      flash('Imported: '+added+' new patient'+(added!==1?'s':'')+', '+updated+' updated','blue');
+      render();
+    }catch(ex){flash('Invalid backup file — check it is a .json export from this app','amber');}
+  };
+  reader.readAsText(file);
+}
+
+// Drag and drop import — works on desktop
+function setupDragDrop(){
+  document.addEventListener('dragover',function(e){
+    e.preventDefault();
+    document.getElementById('app').style.outline='3px dashed var(--blue)';
+  });
+  document.addEventListener('dragleave',function(e){
+    if(!e.relatedTarget)document.getElementById('app').style.outline='';
+  });
+  document.addEventListener('drop',function(e){
+    e.preventDefault();
+    document.getElementById('app').style.outline='';
+    var file=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];
+    if(!file)return;
+    if(file.name.endsWith('.json')||file.type==='application/json'){
+      processImportFile(file);
+    } else {
+      flash('Drop a .json backup file to import','amber');
+    }
+  });
+}
+
+function dlText(content,filename,mime){
+  try{
+    var blob=new Blob([content],{type:mime});var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');a.href=url;a.download=filename;a.style.display='none';
+    document.body.appendChild(a);a.click();
+    setTimeout(function(){URL.revokeObjectURL(url);document.body.removeChild(a);},1000);
+  }catch(e){
+    var w=window.open('','_blank');
+    if(w){w.document.write('<pre style="font-family:monospace;font-size:12px;white-space:pre-wrap;padding:16px">'+content.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</pre><p style="font-family:sans-serif;padding:16px;color:#555">Save as <b>'+filename+'</b></p>');w.document.title=filename;}
+  }
+}
+
+function flash(msg,t){
+  clearTimeout(TOAST_T);
+  TOAST={m:msg,t:t||'green'};
+  // Only re-render if no modal is open — rendering while modal is open
+  // destroys the form inputs and wipes whatever the user has typed
+  if(!MODAL)render();
+  TOAST_T=setTimeout(function(){
+    TOAST=null;
+    if(!MODAL)render();
+  },3500);
+}
+
+render();
+setupDragDrop();
+initAutoBackup();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('./sw.js').then(function(reg) {
+      console.log('SW registered:', reg.scope);
+    }).catch(function(err) {
+      console.log('SW registration failed:', err);
+    });
+  });
+}
+</script>
+</body>
+</html>
